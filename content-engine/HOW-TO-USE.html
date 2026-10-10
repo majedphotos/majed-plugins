@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>مصنع المحتوى — دليل الاستخدام</title>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body {
+  direction: rtl;
+  font-family: 'Cairo', sans-serif;
+  background: #0A1628;
+  color: #fff;
+  min-height: 100vh;
+  text-align: right;
+}
+p, li, span, div { text-align: right; }
+
+.hero {
+  background: linear-gradient(135deg, #0A1628 0%, #0D1B3E 100%);
+  padding: 60px 24px 50px;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+  border-bottom: 1px solid rgba(201,123,58,0.2);
+}
+.hero * { text-align: center; }
+.hero-deco { position:absolute;top:-80px;right:-80px;width:300px;height:300px;background:radial-gradient(circle,rgba(201,123,58,0.12),transparent 70%);pointer-events:none; }
+.hero-deco2 { position:absolute;bottom:-80px;left:-80px;width:300px;height:300px;background:radial-gradient(circle,rgba(79,195,247,0.08),transparent 70%);pointer-events:none; }
+.badge { display:inline-block;background:rgba(201,123,58,0.15);border:1px solid rgba(201,123,58,0.4);border-radius:20px;padding:6px 18px;font-size:12px;color:#C97B3A;font-weight:700;margin-bottom:20px; }
+.hero h1 { font-size:40px;font-weight:900;color:#fff;margin-bottom:12px;line-height:1.3; }
+.hero h1 span { color:#C97B3A; }
+.hero-sub { font-size:15px;color:rgba(255,255,255,0.55);line-height:1.8;max-width:520px;margin:0 auto 32px; }
+.hero-price { display:inline-flex;align-items:center;gap:8px;background:rgba(16,185,129,0.12);border:1px solid rgba(16,185,129,0.3);border-radius:12px;padding:10px 22px;font-size:13px;color:#10B981;font-weight:700; }
+
+.container { max-width:820px;margin:0 auto;padding:48px 24px; }
+
+.sec-label { font-size:11px;font-weight:700;color:#C97B3A;letter-spacing:.1em;margin-bottom:8px; }
+.sec-h { font-size:26px;font-weight:800;color:#fff;margin-bottom:28px;line-height:1.4; }
+
+/* Install steps */
+.install-steps { display:flex;flex-direction:column;gap:16px;margin-bottom:56px; }
+.install-step { background:#0D1B3E;border:1px solid rgba(79,195,247,0.1);border-radius:14px;padding:24px;display:flex;gap:18px;align-items:flex-start; }
+.install-num { min-width:40px;height:40px;background:rgba(201,123,58,0.15);border:2px solid rgba(201,123,58,0.3);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:900;color:#C97B3A;flex-shrink:0; }
+.install-body { flex:1; }
+.install-title { font-size:16px;font-weight:700;color:#fff;margin-bottom:6px; }
+.install-desc { font-size:13px;color:rgba(255,255,255,0.5);line-height:1.8;margin-bottom:10px; }
+.install-cmd { background:rgba(0,0,0,0.3);border:1px solid rgba(255,255,255,0.08);border-radius:8px;padding:10px 14px;font-size:13px;color:#4FC3F7;direction:ltr;text-align:left;font-family:monospace;word-break:break-all; }
+.install-note { margin-top:8px;font-size:12px;color:rgba(255,255,255,0.35);font-style:italic; }
+
+/* Workflow steps */
+.steps { display:flex;flex-direction:column;gap:0;margin-bottom:56px; }
+.step { display:flex;gap:20px;padding:28px 0;border-bottom:1px solid rgba(255,255,255,0.06); }
+.step:last-child { border-bottom:none; }
+.step-num { min-width:48px;height:48px;background:rgba(201,123,58,0.15);border:2px solid rgba(201,123,58,0.3);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:900;color:#C97B3A;flex-shrink:0; }
+.step-body { flex:1; }
+.step-title { font-size:17px;font-weight:700;color:#fff;margin-bottom:6px; }
+.step-sub { font-size:13px;color:rgba(255,255,255,0.5);line-height:1.8;margin-bottom:10px; }
+.step-cmd { background:rgba(0,0,0,0.3);border:1px solid rgba(255,255,255,0.08);border-radius:8px;padding:10px 14px;font-size:13px;color:#4FC3F7;direction:ltr;text-align:left;font-family:monospace; }
+
+/* Skills grid */
+.skills-grid { display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:56px; }
+@media(max-width:600px){ .skills-grid { grid-template-columns:1fr; } }
+.skill-card { background:#0D1B3E;border:1px solid rgba(79,195,247,0.1);border-radius:14px;padding:20px; }
+.skill-icon { width:36px;height:36px;background:rgba(201,123,58,0.12);border-radius:8px;display:flex;align-items:center;justify-content:center;margin-bottom:12px; }
+.skill-name { font-size:15px;font-weight:700;color:#fff;margin-bottom:6px; }
+.skill-desc { font-size:12px;color:rgba(255,255,255,0.45);line-height:1.7; }
+.skill-trigger { margin-top:10px;font-size:11px;color:#C97B3A;background:rgba(201,123,58,0.1);border-radius:6px;padding:4px 10px;display:inline-block; }
+
+/* Value */
+.value-box { background:#0D1B3E;border:1px solid rgba(201,123,58,0.2);border-radius:16px;padding:32px;margin-bottom:56px;text-align:center; }
+.value-box * { text-align:center; }
+.value-box h2 { font-size:22px;font-weight:800;color:#fff;margin-bottom:14px; }
+.value-box p { font-size:14px;color:rgba(255,255,255,0.5);line-height:1.8;max-width:480px;margin:0 auto 24px; }
+.price-row { display:flex;justify-content:center;gap:28px;flex-wrap:wrap; }
+.price-item { text-align:center; }
+.price-n { font-size:30px;font-weight:900;color:#C97B3A; }
+.price-l { font-size:11px;color:rgba(255,255,255,0.35);margin-top:4px;line-height:1.6; }
+
+/* Tips */
+.tips { margin-bottom:56px; }
+.tip { display:flex;gap:14px;margin-bottom:14px;background:rgba(255,255,255,0.02);border-radius:10px;padding:16px;align-items:flex-start; }
+.tip-icon { font-size:18px;min-width:26px;margin-top:2px; }
+.tip-text { font-size:13px;color:rgba(255,255,255,0.55);line-height:1.8; }
+.tip-text b { color:#fff; }
+
+.footer { text-align:center;padding:32px 24px;border-top:1px solid rgba(255,255,255,0.06);color:rgba(255,255,255,0.25);font-size:12px; }
+.footer span { color:#C97B3A; }
+
+/* plugin structure */
+.file-tree { background:rgba(0,0,0,0.3);border:1px solid rgba(255,255,255,0.08);border-radius:10px;padding:18px 20px;font-family:monospace;font-size:13px;direction:ltr;text-align:left;color:rgba(255,255,255,0.7);line-height:2;margin-bottom:24px; }
+.file-tree .gold { color:#C97B3A; }
+.file-tree .sky { color:#4FC3F7; }
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <div class="hero-deco"></div>
+  <div class="hero-deco2"></div>
+  <div class="badge">🏭 مصنع المحتوى v1.0</div>
+  <h1>مكينة الكاروسيل<br><span>الاحترافي</span></h1>
+  <p class="hero-sub">من خبر إلى كاروسيل جاهز للنشر بهويتك البصرية الكاملة — في أقل من دقيقتين</p>
+  <div class="hero-price">
+    <svg width="16" height="16" viewBox="0 0 20 20" fill="currentColor"><path d="M10 2a8 8 0 100 16A8 8 0 0010 2zm1 5H9v2H7v2h2v4h2v-4h2v-2h-2V7z"/></svg>
+    مبني بالكامل مع Claude Cowork
+  </div>
+</div>
+
+<div class="container">
+
+  <!-- التثبيت -->
+  <div class="sec-label">الخطوة الأولى</div>
+  <div class="sec-h">كيف تثبّت البلقن</div>
+
+  <div class="install-steps">
+    <div class="install-step">
+      <div class="install-num">1</div>
+      <div class="install-body">
+        <div class="install-title">حمّل ملف البلقن</div>
+        <div class="install-desc">احصل على ملف <b>masna3-al-muhtawa.plugin</b> — ملف واحد فقط يحتوي كل شيء بداخله (كل السكلز + صفحة الشرح). ما تحتاج أي ملفات إضافية.</div>
+      </div>
+    </div>
+    <div class="install-step">
+      <div class="install-num">2</div>
+      <div class="install-body">
+        <div class="install-title">افتح Claude Desktop</div>
+        <div class="install-desc">افتح تطبيق Claude على الكمبيوتر (Cowork mode). تأكد إنك على أحدث إصدار.</div>
+      </div>
+    </div>
+    <div class="install-step">
+      <div class="install-num">3</div>
+      <div class="install-body">
+        <div class="install-title">ثبّت البلقن بأمر واحد</div>
+        <div class="install-desc">افتح Terminal واكتب:</div>
+        <div class="install-cmd">claude plugin install /path/to/masna3-al-muhtawa.plugin</div>
+        <div class="install-note">استبدل /path/to/ بالمسار الحقيقي للملف على جهازك</div>
+      </div>
+    </div>
+    <div class="install-step">
+      <div class="install-num">4</div>
+      <div class="install-body">
+        <div class="install-title">شغّل المصنع</div>
+        <div class="install-desc">بعد التثبيت مباشرة، قول للكلود:</div>
+        <div class="install-cmd">سجل بياناتي</div>
+        <div class="install-note">يطلع نموذج تملأ فيه هويتك مرة واحدة — وبعدها كل شيء يشتغل تلقائياً</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- طريقة الاستخدام اليومي -->
+  <div class="sec-label">الاستخدام اليومي</div>
+  <div class="sec-h">4 خطوات من الخبر للكاروسيل</div>
+
+  <div class="steps">
+    <div class="step">
+      <div class="step-num">1</div>
+      <div class="step-body">
+        <div class="step-title">سجّل هويتك — مرة واحدة فقط</div>
+        <div class="step-sub">قول "سجل بياناتي" — يطلع نموذج تملأه: اسم حسابك، نيشك، لهجتك. ارفع لوغو أو صورة من حسابك وهو يستخرج الألوان والخط تلقائياً.</div>
+        <div class="step-cmd">سجل بياناتي</div>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">2</div>
+      <div class="step-body">
+        <div class="step-title">شوف أخبار نيشك</div>
+        <div class="step-sub">قول "منصة الأخبار" — يجيبلك داش بورد HTML بألوانك فيه آخر 8-10 أخبار من مجالك. كل خبر فيه زر نسخ.</div>
+        <div class="step-cmd">منصة الأخبار</div>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">3</div>
+      <div class="step-body">
+        <div class="step-title">حوّل الخبر كاروسيل</div>
+        <div class="step-sub">اضغط على الخبر اللي يعجبك، انسخ النص وحطه عند الكلود — يبني لك كاروسيل 4-8 سلايدات بهويتك الكاملة.</div>
+        <div class="step-cmd">[الصق نص الخبر هنا مباشرة]</div>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">4</div>
+      <div class="step-body">
+        <div class="step-title">صدّر صور PNG جاهزة</div>
+        <div class="step-sub">راجع الكاروسيل وعند الاعتماد اضغط "تصدير كل السلايدات PNG" — ينزّل كل سلايد صورة 1080×1350 جاهزة للانستقرام.</div>
+        <div class="step-cmd">اضغط زر "تصدير كل السلايدات PNG"</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- السكلز -->
+  <div class="sec-label">مكونات البلقن</div>
+  <div class="sec-h">6 سكلز تشتغل مع بعض</div>
+
+  <div class="skills-grid">
+    <div class="skill-card">
+      <div class="skill-icon">
+        <svg width="18" height="18" viewBox="0 0 20 20" fill="none" stroke="#C97B3A" stroke-width="1.8"><circle cx="10" cy="7" r="3"/><path d="M4 17s1-4 6-4 6 4 6 4"/></svg>
+      </div>
+      <div class="skill-name">Onboarding</div>
+      <div class="skill-desc">يجمع هويتك البصرية — اسم الحساب، النيش، الألوان، الخط — ويحفظها مرة واحدة لكل شيء بعدها.</div>
+      <div class="skill-trigger">كلمة التشغيل: "سجل بياناتي"</div>
+    </div>
+    <div class="skill-card">
+      <div class="skill-icon">
+        <svg width="18" height="18" viewBox="0 0 20 20" fill="none" stroke="#4FC3F7" stroke-width="1.8"><rect x="3" y="4" width="14" height="12" rx="2"/><path d="M7 9h6M7 12h4"/></svg>
+      </div>
+      <div class="skill-name">News Dashboard</div>
+      <div class="skill-desc">يجلب آخر أخبار نيشك ويعرضها في داش بورد تفاعلي بألوانك وهويتك البصرية.</div>
+      <div class="skill-trigger">كلمة التشغيل: "منصة الأخبار"</div>
+    </div>
+    <div class="skill-card">
+      <div class="skill-icon">
+        <svg width="18" height="18" viewBox="0 0 20 20" fill="none" stroke="#C97B3A" stroke-width="1.8"><rect x="3" y="3" width="6" height="8" rx="1"/><rect x="11" y="3" width="6" height="5" rx="1"/><rect x="11" y="10" width="6" height="7" rx="1"/><rect x="3" y="13" width="6" height="4" rx="1"/></svg>
+      </div>
+      <div class="skill-name">Carousel Creator</div>
+      <div class="skill-desc">يحلّل الخبر ويبني كاروسيل 4-8 سلايدات بهويتك الكاملة ولهجتك الخاصة.</div>
+      <div class="skill-trigger">كلمة التشغيل: الصق نص الخبر</div>
+    </div>
+    <div class="skill-card">
+      <div class="skill-icon">
+        <svg width="18" height="18" viewBox="0 0 20 20" fill="none" stroke="#4FC3F7" stroke-width="1.8"><path d="M10 3v10M6 9l4 4 4-4"/><path d="M4 15h12"/></svg>
+      </div>
+      <div class="skill-name">PNG Exporter</div>
+      <div class="skill-desc">يصدّر كل سلايد صورة PNG بدقة 1080×1350 جاهزة للرفع على انستقرام.</div>
+      <div class="skill-trigger">كلمة التشغيل: زر التصدير في الكاروسيل</div>
+    </div>
+    <div class="skill-card">
+      <div class="skill-icon">
+        <svg width="18" height="18" viewBox="0 0 20 20" fill="none" stroke="#C97B3A" stroke-width="1.8"><rect x="2" y="5" width="12" height="10" rx="2"/><path d="M14 9l4-2.5v7L14 11z"/></svg>
+      </div>
+      <div class="skill-name">Animated Video Cover</div>
+      <div class="skill-desc">يبني كفر فيديو متحرك للكاروسيل بترميز H.264 — أول فريم يساوي آخر فريم عشان الثمبنيل يطلع نظيف.</div>
+      <div class="skill-trigger">كلمة التشغيل: "سو كفر فيديو"</div>
+    </div>
+    <div class="skill-card">
+      <div class="skill-icon">
+        <svg width="18" height="18" viewBox="0 0 20 20" fill="none" stroke="#C97B3A" stroke-width="1.8"><path d="M3 10l14-6-5 14-2.5-5.5z"/></svg>
+      </div>
+      <div class="skill-name">Blotato Publish</div>
+      <div class="skill-desc">ينشر على انستقرام وتيك توك وثريدز و X وبنترست من داخل المحادثة — يرفع من جهازك مباشرة بلا استضافة.</div>
+      <div class="skill-trigger">كلمة التشغيل: "انشر"</div>
+    </div>
+    <div class="skill-card">
+      <div class="skill-icon">
+        <svg width="18" height="18" viewBox="0 0 20 20" fill="none" stroke="#C97B3A" stroke-width="1.8"><circle cx="10" cy="10" r="7.5"/><path d="M2.5 10h15M10 2.5c2.5 2.6 2.5 12.4 0 15M10 2.5c-2.5 2.6-2.5 12.4 0 15"/></svg>
+      </div>
+      <div class="skill-name">Arabize Post</div>
+      <div class="skill-desc">بوست رسمي إنقليزي يرجع لك بنفس تصميمه بالضبط بس بالعربي — مع كابشن وشريحة أخيرة بلمستك.</div>
+      <div class="skill-trigger">كلمة التشغيل: "عرّب هالبوست"</div>
+    </div>
+  </div>
+
+  <!-- الجديد بنسخة 5.0 -->
+  <div class="value-box" style="border-color:#D97757">
+    <h2>🆕 الجديد بنسخة 5.0 (أكتوبر ٢٠٢٦)</h2>
+    <ul style="line-height:2;margin:10px 0 0;padding-inline-start:20px">
+      <li><b>غلاف من نص الخبر:</b> كل غلاف فكرته من الخبر نفسه — مو قالب يتكرر.</li>
+      <li><b>أحجام تنقرا بالجوال:</b> العنوان والشعار والنص بحدود دنيا مقاسة على شبكة البروفايل.</li>
+      <li><b>تعريب البوستات:</b> سكل جديد.</li>
+      <li><b>منصة الأخبار:</b> تفحص التاريخ والمصدر قبل أي خبر.</li>
+    </ul>
+  </div>
+
+  <!-- الجديد بنسخة 3.0 -->
+  <div class="value-box" style="border-color:#22c55e">
+    <h2>🆕 الجديد بنسخة 3.0 (أغسطس ٢٠٢٦)</h2>
+    <p>تحديث مبني على تشغيل حقيقي: إعلانات منتجات كاملة انبنت ونُشرت، وكل خطأ ظهر صار قاعدة داخل البلقن.</p>
+    <ul style="line-height:2;margin:10px 0 0;padding-inline-start:20px">
+      <li><b>استوديو الإعلان يتبع صفحة المنتج نفسها:</b> يقرأ أقسام الصفحة بترتيبها، وكل ميزة تاخذ <b>مقطعها هي</b> ونصها هي — بدل ما يخمّن.</li>
+      <li><b>الفيديو يتقدّم على الصورة:</b> أول شريحة فيديو المنتج، وكل ميزة لها مقطع تصير شريحة فيديو.</li>
+      <li><b>المقاطع تنركّب بمقاس الشريحة</b> (1080×1440، خلفية معتمة والنص تحت المقطع) — ما ينشر مقطع خام 16:9.</li>
+      <li><b>الأرقام من نص الصفحة حرفياً</b>، والمصطلحات التقنية تبقى إنقليزية (4K/120fps · f/2.0 · ISO)، وممنوع إنقليزي بحروف عربية.</li>
+      <li><b>فحص المقاطع بأربع لقطات</b> مع قصّ البداية بدل رمي المقطع لو فيه لقطة تخالف قيودك.</li>
+      <li><b>مدير الجودة:</b> 12 فحصاً ميكانيكياً سريعاً قبل الفحص البصري (تكرار ميديا · ميزتان بنفس الموضوع · رقم مو بالمصدر · حروف مكسورة · حد الشرائح…).</li>
+      <li><b>الرموز تُختار من كلام البطاقة</b> (قاضي→مطرقة، جامعي→قبعة تخرج، خبير→عدسة) بدل شارة الحرف الأول.</li>
+      <li><b>انتظار تحميل الخطوط قبل أي تصدير</b> — يمنع الحروف المكسورة (؟؟) داخل الصور والمقاطع.</li>
+    </ul>
+  </div>
+
+  <!-- القيمة -->
+  <div class="value-box">
+    <h2>💰 قيمة هذا البلقن في السوق</h2>
+    <p>هذا النظام يوفّر على صانع المحتوى وقتاً وجهداً حقيقياً — وهو قابل للبيع كمنتج رقمي أو خدمة.</p>
+    <div class="price-row">
+      <div class="price-item">
+        <div class="price-n">$19–29</div>
+        <div class="price-l">بيع مباشر كأداة رقمية<br>للشخص الواحد</div>
+      </div>
+      <div class="price-item">
+        <div class="price-n">$49–97</div>
+        <div class="price-l">باكج + شرح تفاعلي<br>+ تخصيص هوية</div>
+      </div>
+      <div class="price-item">
+        <div class="price-n">$200+</div>
+        <div class="price-l">تقديمه كخدمة<br>شهرية للبزنسات</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- نصائح -->
+  <div class="sec-label">نصائح مهمة</div>
+  <div class="sec-h">تستفيد أكثر لو تعرف هذا</div>
+
+  <div class="tips">
+    <div class="tip">
+      <div class="tip-icon">🎨</div>
+      <div class="tip-text"><b>ارفع صورة من حسابك للأونبوردينق</b> — كلما كانت الصورة أوضح، استخرج الكلود الألوان والخط بدقة أعلى وكان الكاروسيل أقرب لهويتك الحقيقية.</div>
+    </div>
+    <div class="tip">
+      <div class="tip-icon">📦</div>
+      <div class="tip-text"><b>السكلز جزء أساسي من البلقن</b> — لا تحذف أي سكل من فولدر skills، وإلا البلقن ما يشتغل صح.</div>
+    </div>
+    <div class="tip">
+      <div class="tip-icon">📰</div>
+      <div class="tip-text"><b>اختار الأخبار الساخنة</b> — الأخبار اللي فيها أرقام أو مفاجأة تبني منها كاروسيل أقوى بكثير من الأخبار العامة.</div>
+    </div>
+    <div class="tip">
+      <div class="tip-icon">✏️</div>
+      <div class="tip-text"><b>راجع الكاروسيل قبل التصدير</b> — تقدر تقول "عدّل السلايد الثاني" أو "غيّر اللهجة" وكلود يعدّل الملف مباشرة.</div>
+    </div>
+    <div class="tip">
+      <div class="tip-icon">💾</div>
+      <div class="tip-text"><b>بيانات الأونبوردينق تُحفظ دائماً</b> — ما تحتاج تكررها كل مرة. فقط قول "منصة الأخبار" وتلقائياً يستخدم هويتك المحفوظة.</div>
+    </div>
+  </div>
+
+</div>
+
+<div class="footer">
+  مصنع المحتوى v1.0 — مبني بـ <span>Claude Cowork</span> · بواسطة <span>@majedphotos</span>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,23 @@
+{
+  "name": "content-engine-v5",
+  "version": "5.0.1",
+  "description": "Content engine for Arabic creators — onboarding, news dashboard, carousel builder with covers designed from the story itself (phone-readable sizes), Instagram post arabization, one-command Blotato publishing, a product-ad studio agent, and a quality-manager gate.",
+  "author": {
+    "name": "majedphotos"
+  },
+  "keywords": [
+    "arabic",
+    "carousel",
+    "content-creator",
+    "instagram",
+    "social-media",
+    "news",
+    "video",
+    "product-ads",
+    "agent",
+    "quality-gate",
+    "blotato",
+    "publishing",
+    "scheduling"
+  ]
+}
