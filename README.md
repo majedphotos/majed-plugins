@@ -9,6 +9,8 @@
 
 ## التثبيت
 
+<p align="center"><img src="assets/add-marketplace.gif" width="300" alt="شلون تضيف الماركت بليس"></p>
+
 **من claude.ai أو تطبيق الديسكتوب** (يوصل الويب والديسكتوب والجوال):
 1. Customize ← Plugins ← Add ← Add marketplace
 2. اكتب: `majedphotos/majed-plugins`
