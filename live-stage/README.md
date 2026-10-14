@@ -11,6 +11,8 @@
 
 بعدها قول لكلود "أبي عرض عن ..." / Then ask Claude for "a live presentation about ...".
 
+<p align="center"><img src="assets/04-sketch.jpg" width="640" alt="شاشة العرض الحي: مخطط يرسم نفسه وأنت تتكلم"></p>
+
 ---
 
 <div dir="rtl">
@@ -25,7 +27,25 @@
 - **تصويت الجمهور بالباركود:** يصوّرون الباركود ويصوّتون من جوالاتهم، والنتيجة تطلع على الشاشة.
 - **الرجوع بالصوت:** "خلونا نرجع لـ..." يرجعك لمشهد سابق.
 - **تسخين:** أول جلسة مع هايكو تنفتح لما يتحمّل العرض، عشان أول رسمة ما تتأخر.
-- **ريموت احتياطي:** الأسهم أو الكليكر، وطقتين على زر المايك تمسح الشاشة.
+- **ريموت احتياطي:** الأسهم أو الكليكر. وطقتين على المايك نفسه (مثلاً مايك وايرلس على صدرك) تمسح الشاشة، والصفحة تفرّق بين الطقة وكلامك.
+
+### أمثلة
+
+كل صورة تحت طلعت من جملة وحدة قالها المتحدث. الجمل من عرض «الذكاء الاصطناعي لصناع المحتوى» الموجود في [`decks/ai-for-creators.json`](decks/ai-for-creators.json)، والكلمات العريضة هي عبارة المشهد.
+
+| تقول | يطلع على الشاشة |
+|---|---|
+| «هلا والله، اليوم بنتكلم عن الذكاء الاصطناعي **لصناع المحتوى**» | <img src="assets/01-title.jpg" width="380" alt="عنوان العرض"> |
+| «تدرون إن **ستة وثمانين** بالمية من صناع المحتوى يستخدمونه؟» | <img src="assets/02-counter.jpg" width="380" alt="عداد ٨٦٪"> |
+| «طيب **وش استفادوا** منه؟» | <img src="assets/03-cards.jpg" width="380" alt="ثلاث بطاقات بأرقام التقرير"> |
+| «خلونا نشوف **رحلة المحتوى** من الفكرة للنشر» | <img src="assets/04-sketch.jpg" width="380" alt="مخطط يرسم نفسه"> |
+| «في **ثلاث استخدامات**» ثم «أولاً…» و«ثانياً…» | <img src="assets/05-list.jpg" width="380" alt="قائمة تنكشف بند بند"> |
+| «الحين **بحط لكم سؤال** وأبي تفاعلكم» | <img src="assets/06-poll.jpg" width="380" alt="تصويت بالباركود"> |
+| «ارسم لي هرم فيه ثلاث طبقات: الفكرة فوق، والسكربت بالنص، والتصوير تحت» | <img src="assets/07-haiku-sketch.jpg" width="380" alt="هرم رسمه هايكو"> |
+
+- **آخر صورة مو مجهزة في العرض:** هايكو رسمها من الجملة نفسها خلال ثواني. نفس الشي لو قلت «طلّع لهم أربع بطاقات عن…» أو «قارن بين…».
+- **أرقام التصويت في الصورة** أصوات تجريبية، والعنوان تحت الباركود مثال. وقت العرض يطلع عنوان جهازك.
+- **أرقام العداد والبطاقات** من [تقرير أدوبي للمبدعين (أكتوبر ٢٠٢٥)](https://news.adobe.com/news/2025/10/adobe-max-2025-creators-survey).
 
 ### التشغيل في ٣ خطوات
 1. سجّل دخول Claude Code مرة وحدة: شغّل `claude` في الترمنال واكتب `/login`.
@@ -80,7 +100,25 @@ A whiteboard that follows your voice. You talk normally; the page transcribes yo
 - **Audience QR poll**: people scan, vote from their phones, results update live on screen.
 - **Voice back-navigation**: "let's go back to…" returns to an earlier scene.
 - **Warmup**: the Haiku session starts when the deck loads, so the first drawing isn't slow.
-- **Fallback remote**: arrow keys / clicker; double-tap the mic button to clear the board.
+- **Fallback remote**: arrow keys / clicker. Tap the microphone itself twice (e.g. a wireless lapel mic) to clear the board; the page tells taps apart from speech.
+
+### Examples
+
+Each screenshot below came from a single spoken sentence, taken from the "AI for content creators" deck in [`decks/ai-for-creators.json`](decks/ai-for-creators.json). Bold words are the scene's trigger phrase.
+
+| You say (Arabic, translated) | On screen |
+|---|---|
+| "Today we're talking about AI **for content creators**" | <img src="assets/01-title.jpg" width="380" alt="Title scene"> |
+| "Did you know **eighty-six** percent of creators use it?" | <img src="assets/02-counter.jpg" width="380" alt="86% counter"> |
+| "So **what did they gain** from it?" | <img src="assets/03-cards.jpg" width="380" alt="Three stat cards"> |
+| "Let's look at **the content journey**, from idea to posting" | <img src="assets/04-sketch.jpg" width="380" alt="Self-drawing flow"> |
+| "There are **three uses**", then "first…", "second…" | <img src="assets/05-list.jpg" width="380" alt="List revealing item by item"> |
+| "**I'll put a question to you**, I want your input" | <img src="assets/06-poll.jpg" width="380" alt="QR poll"> |
+| "Draw me a pyramid with three layers: idea on top, script in the middle, shooting at the bottom" | <img src="assets/07-haiku-sketch.jpg" width="380" alt="Pyramid drawn by Haiku"> |
+
+- **The last one isn't in the deck.** Haiku drew it from the sentence within a few seconds.
+- **The poll numbers are test votes**, and the address under the QR is an example. Live, it shows your laptop's address.
+- **The counter and card figures** come from [Adobe's Creators' Toolkit Report (October 2025)](https://news.adobe.com/news/2025/10/adobe-max-2025-creators-survey).
 
 ### Quick start
 1. Log in to Claude Code once: run `claude`, then `/login`.
