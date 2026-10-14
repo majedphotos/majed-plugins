@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>صوّت</title>
+<style>
+:root{--bg:#fff;--ink:#14141a;--mute:#6b6d7b;--line:#e3e4ea;--accent:#3E63DD}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:system-ui,-apple-system,'Segoe UI',sans-serif;padding:24px 16px;min-height:100vh}
+main{max-width:520px;margin:0 auto;display:flex;flex-direction:column;gap:14px}
+h1{font-size:24px;line-height:1.4;margin:0 0 6px}
+.opt{font:inherit;font-size:19px;padding:16px;border-radius:16px;border:2px solid var(--line);background:#fff;color:var(--ink);text-align:start;cursor:pointer}
+.opt:active{border-color:var(--accent)}
+textarea{font:inherit;font-size:17px;padding:14px;border-radius:16px;border:2px solid var(--line);min-height:90px;resize:vertical}
+.send{font:inherit;font-size:18px;padding:14px;border-radius:999px;border:0;background:var(--accent);color:#fff}
+.msg{color:var(--mute);font-size:17px;text-align:center;padding:40px 0}
+.done{font-size:22px;text-align:center;padding:40px 0}
+</style>
+</head>
+<body>
+<main id="app"><p class="msg">لحظة…</p></main>
+<script>
+const app=document.getElementById('app');
+let voter='';
+try{ voter=localStorage.getItem('voter')||''; if(!voter){ voter=Math.random().toString(36).slice(2)+Date.now().toString(36); localStorage.setItem('voter',voter);} }catch(e){ voter=Math.random().toString(36).slice(2); }
+const voted=id=>{try{return localStorage.getItem('v:'+id)==='1'}catch(e){return false}};
+const markVoted=id=>{try{localStorage.setItem('v:'+id,'1')}catch(e){}};
+let current='';
+function el(tag,cls,txt){const e=document.createElement(tag); if(cls) e.className=cls; if(txt!==undefined) e.textContent=txt; return e;}
+function render(p){
+  current=p.id+(p.open?'1':'0');
+  app.replaceChildren();
+  if(!p.open||!p.id){ app.append(el('p','msg','ما فيه تصويت مفتوح الحين. خلك على هالصفحة، أول ما يبدأ بيطلع لك.')); return; }
+  if(voted(p.id)){ app.append(el('p','done','وصل صوتك، شوف الشاشة 👀')); return; }
+  app.append(el('h1','',p.question));
+  p.options.forEach((o,i)=>{ const b=el('button','opt',o); b.type='button'; b.onclick=()=>send(p.id,{option:i}); app.append(b); });
+  if(p.free){
+    const t=el('textarea'); t.placeholder='أو اكتب جوابك'; t.maxLength=140;
+    const s=el('button','send','أرسل'); s.type='button';
+    s.onclick=()=>{ const v=t.value.trim(); if(v) send(p.id,{text:v}); };
+    app.append(t,s);
+  }
+}
+async function send(id,payload){
+  try{
+    const r=await fetch('/poll/vote',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(Object.assign({poll:id,voter},payload))});
+    if(r.ok||r.status===409){ markVoted(id); current=''; load(); }
+  }catch(e){ alert('ما وصل، جرّب مرة ثانية'); }
+}
+async function load(){
+  try{
+    const p=await (await fetch('/poll',{cache:'no-store'})).json();
+    if(p.id+(p.open?'1':'0')!==current) render(p);
+  }catch(e){}
+}
+load(); setInterval(load,2000);
+</script>
+</body>
+</html>
