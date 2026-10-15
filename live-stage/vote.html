@@ -13,6 +13,9 @@ h1{font-size:24px;line-height:1.4;margin:0 0 6px}
 .opt{font:inherit;font-size:19px;padding:16px;border-radius:16px;border:2px solid var(--line);background:#fff;color:var(--ink);text-align:start;cursor:pointer}
 .opt:active{border-color:var(--accent)}
 textarea{font:inherit;font-size:17px;padding:14px;border-radius:16px;border:2px solid var(--line);min-height:90px;resize:vertical}
+.opt.on{border-color:var(--accent);background:#eef1fd;font-weight:600}
+.opt.on::before{content:'✓ ';color:var(--accent)}
+.sub{color:var(--mute);margin:-8px 0 2px;font-size:15px}
 .send{font:inherit;font-size:18px;padding:14px;border-radius:999px;border:0;background:var(--accent);color:#fff}
 .msg{color:var(--mute);font-size:17px;text-align:center;padding:40px 0}
 .done{font-size:22px;text-align:center;padding:40px 0}
@@ -34,6 +37,17 @@ function render(p){
   if(!p.open||!p.id){ app.append(el('p','msg','ما فيه تصويت مفتوح الحين. خلك على هالصفحة، أول ما يبدأ بيطلع لك.')); return; }
   if(voted(p.id)){ app.append(el('p','done','وصل صوتك، شوف الشاشة 👀')); return; }
   app.append(el('h1','',p.question));
+  if(p.multi){
+    // اختيار متعدد: يأشر على اللي يبيه ويضغط أرسل
+    app.append(el('p','sub','تقدر تختار أكثر من خيار'));
+    const picked=new Set();
+    p.options.forEach((o,i)=>{ const b=el('button','opt',o); b.type='button'; b.onclick=()=>{ picked.has(i)?picked.delete(i):picked.add(i); b.classList.toggle('on',picked.has(i)); }; app.append(b); });
+    const t=p.free?el('textarea'):null; if(t){ t.placeholder='أو اكتب جوابك'; t.maxLength=140; app.append(t); }
+    const s=el('button','send','أرسل'); s.type='button';
+    s.onclick=()=>{ const v=t?t.value.trim():''; if(picked.size||v) send(p.id,{options:[...picked],text:v}); };
+    app.append(s);
+    return;
+  }
   p.options.forEach((o,i)=>{ const b=el('button','opt',o); b.type='button'; b.onclick=()=>send(p.id,{option:i}); app.append(b); });
   if(p.free){
     const t=el('textarea'); t.placeholder='أو اكتب جوابك'; t.maxLength=140;

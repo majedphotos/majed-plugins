@@ -113,6 +113,16 @@ body{background:var(--bg);color:var(--ink);font-family:var(--body);overflow:hidd
 .poll .pr{flex:1;display:flex;flex-direction:column;justify-content:center;gap:2vh;min-width:0}
 .poll h3{text-align:start}
 .poll .tot{color:var(--mute);font-size:clamp(14px,1.4vw,24px)}
+.poll .tot.live{color:var(--accent);font-weight:600;font-size:clamp(20px,2.6vw,44px);font-family:var(--display)}
+.poll .hint{color:var(--mute);font-size:clamp(14px,1.4vw,24px);margin-top:-1vh}
+/* ترتيب حي: كل صف يتحرك لمكانه حسب الأصوات */
+.rank{--rh:clamp(42px,7.5vh,76px);position:relative;height:calc(var(--n)*var(--rh));font-family:var(--display);font-size:clamp(16px,2vw,34px)}
+.rrow{position:absolute;inset-inline:0;top:0;height:var(--rh);display:grid;grid-template-columns:1.7em minmax(0,30%) 1fr 2.4em;gap:1vw;align-items:center;transform:translateY(calc(var(--pos)*var(--rh)));transition:transform .7s cubic-bezier(.2,.8,.2,1)}
+.rrow .rk{display:grid;place-items:center;width:1.5em;height:1.5em;border-radius:50%;background:var(--line);color:var(--mute);font-weight:600;font-size:.8em;transition:background .4s,color .4s}
+.rrow.first .rk{background:var(--accent);color:#fff}
+.rrow .rl{min-width:0;overflow-wrap:anywhere}
+.rrow .v{font-variant-numeric:tabular-nums;font-weight:600;text-align:end}
+@media (prefers-reduced-motion:reduce){.rrow{transition:none}}
 .bubbles{display:flex;flex-wrap:wrap;gap:1vh 1vw;max-height:20vh;overflow:hidden}
 .bub{padding:.45em 1em;border-radius:999px;background:#eef1fd;font-size:clamp(14px,1.5vw,26px);animation:pop .5s both}
 .scn{position:fixed;inset-block-start:9px;inset-inline-end:34px;font-size:13px;color:var(--mute)}
@@ -543,11 +553,17 @@ function buildPoll(a){
   const node=el('div','wg poll');
   const qr=el('div','qr'), box=el('div'), url=el('small','','…'); qr.append(box,url);
   const pr=el('div','pr'); pr.append(el('h3','',a.question));
-  const list=el('div','barlist');
-  a.options.forEach(o=>{const row=el('div','brow'), tr=el('div','trackb'), f=el('div','fillb'); tr.append(f); row.append(el('span','',o),tr,el('span','v','0')); list.append(row);});
+  if(a.multi) pr.append(el('div','hint','تقدر تختار أكثر من خيار'));
+  const list=el('div','rank'); list.style.setProperty('--n',a.options.length);
+  a.options.forEach((o,i)=>{
+    const row=el('div','rrow'); row.style.setProperty('--pos',i);
+    const tr=el('div','trackb'), f=el('div','fillb'); tr.append(f);
+    row.append(el('span','rk',toAr(i+1)),el('span','rl',o),tr,el('span','v','0'));
+    list.append(row);
+  });
   pr.append(list);
   const bubbles=el('div','bubbles'); if(a.free) pr.append(bubbles);
-  const tot=el('div','tot','صوّر الباركود وصوّت من جوالك'); pr.append(tot);
+  const tot=el('div','tot',''); pr.append(tot);
   node.append(qr,pr);
   node._qr={box,url,list,bubbles,tot};
   return node;
@@ -561,42 +577,38 @@ async function startPoll(rec,a){
     ui.url.textContent=info.vote_url.replace(/^http:\/\//,'');
     if(window.QRCode) new QRCode(ui.box,{text:info.vote_url,width:360,height:360,correctLevel:QRCode.CorrectLevel.M});
     else ui.url.textContent='مكتبة الباركود ما حمّلت (تحتاج إنترنت): '+ui.url.textContent;
-    await fetch('/poll/open',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({id,question:a.question,options:a.options,free:a.free})});
-  }catch(e){ ui.url.textContent='شغّل server.py وافتح الصفحة من localhost:8000'; return; }
+  }catch(e){ ui.url.textContent='شغّل server.py وافتح الصفحة من السيرفر'; return; }
+  // السؤال والباركود يطلعون أول، والتصويت ينفتح بعد ثواني قليلة
+  const wait=Math.max(0,Math.min(10,Number.isFinite(a.delay)?a.delay:2));
+  for(let s=wait;s>0&&alive;s--){ ui.tot.textContent='التصويت يبدأ بعد '+toAr(s)+'…'; await new Promise(r=>setTimeout(r,1000)); }
+  if(!alive) return;
+  try{ await fetch('/poll/open',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({id,question:a.question,options:a.options,free:a.free,multi:a.multi})}); }
+  catch(e){ ui.tot.textContent='السيرفر ما يرد'; return; }
+  ui.tot.textContent='التصويت مفتوح، صوّر الباركود'; ui.tot.classList.add('live');
   let shown=0;
   const tick=async()=>{
     if(!alive) return;
     try{
       const p=await (await fetch('/poll',{cache:'no-store'})).json(); if(p.id!==id) return;
-      const total=p.counts.reduce((x,y)=>x+y,0), max=Math.max(...p.counts,1);
-      [...ui.list.children].forEach((row,i)=>{const f=row.querySelector('.fillb'); f.style.width=(total?p.counts[i]/total*100:0)+'%'; f.classList.toggle('top',p.counts[i]===max&&total>0); row.querySelector('.v').textContent=toEn(p.counts[i]);});
+      const voters=p.voters||0, total=p.counts.reduce((x,y)=>x+y,0), max=Math.max(0,...p.counts);
+      const base=p.multi?voters:total;   // في الاختيار المتعدد النسبة من عدد الناس، مو من عدد الأصوات
+      const rows=[...ui.list.children];
+      // الأعلى فوق، والتعادل يحافظ على الترتيب الأصلي
+      p.counts.map((c,i)=>[c,i]).sort((x,y)=>y[0]-x[0]||x[1]-y[1]).forEach(([c,i],pos)=>{
+        const row=rows[i];
+        row.style.setProperty('--pos',pos);
+        row.querySelector('.rk').textContent=toAr(pos+1);
+        row.classList.toggle('first',pos===0&&c>0);
+        const f=row.querySelector('.fillb');
+        f.style.width=(base?c/base*100:0)+'%'; f.classList.toggle('top',c===max&&c>0);
+        row.querySelector('.v').textContent=toEn(c);
+      });
       for(;shown<p.texts.length;shown++){ ui.bubbles.prepend(el('span','bub',p.texts[shown])); while(ui.bubbles.children.length>14) ui.bubbles.lastElementChild.remove(); }
-      const n=total+p.texts.length; ui.tot.textContent=n?toAr(n)+' مشاركة':'صوّر الباركود وصوّت من جوالك';
+      ui.tot.textContent=voters?toAr(voters)+' شخص شارك':'التصويت مفتوح، صوّر الباركود';
     }catch(e){}
     if(alive) setTimeout(tick,1000);
   };
   tick();
-}
-function buildSketch(a){
-  const NS='http://www.w3.org/2000/svg', node=el('div','wg sketch');
-  if(a.title) node.append(el('h3','',a.title));
-  const svg=document.createElementNS(NS,'svg'); svg.setAttribute('class','sksvg'); svg.setAttribute('viewBox','-5 -5 110 110');
-  const mk=(tag,attrs,i,cls)=>{const e=document.createElementNS(NS,tag); for(const k in attrs) e.setAttribute(k,attrs[k]); e.setAttribute('class',cls); e.style.setProperty('--i',i); svg.append(e); return e;};
-  a.shapes.forEach((sh,i)=>{
-    const c=sh.color||'#14141a', cls=sh.fill?'s f':'s', base={stroke:c,fill:c,'fill-opacity':0,pathLength:1};
-    if(sh.k==='circle') mk('circle',{...base,cx:sh.x,cy:sh.y,r:sh.r},i,cls);
-    else if(sh.k==='rect') mk('rect',{...base,x:sh.x,y:sh.y,width:sh.w,height:sh.h,rx:1.5},i,cls);
-    else if(sh.k==='line'||sh.k==='arrow'){
-      mk('line',{...base,x1:sh.x1,y1:sh.y1,x2:sh.x2,y2:sh.y2},i,'s');
-      if(sh.k==='arrow'){ const ang=Math.atan2(sh.y2-sh.y1,sh.x2-sh.x1), L=4;
-        const p=[[sh.x2,sh.y2],[sh.x2-L*Math.cos(ang-.45),sh.y2-L*Math.sin(ang-.45)],[sh.x2-L*Math.cos(ang+.45),sh.y2-L*Math.sin(ang+.45)]];
-        mk('polygon',{...base,points:p.map(q=>q.join(',')).join(' ')},i+.5,'s f').style.setProperty('--fo',1); }
-    }
-    else if(sh.k==='poly') mk(sh.close?'polygon':'polyline',{...base,points:sh.points.map(q=>q.join(',')).join(' ')},i,sh.close?cls:'s');
-    else if(sh.k==='text'){ const t=mk('text',{x:sh.x,y:sh.y,fill:c},i,''); t.textContent=sh.text; }
-  });
-  node.append(svg); if(a.label) node.append(el('div','lbl',a.label));
-  return node;
 }
 function buildKeyword(text){ const node=el('div','wg kw'); node.append(el('div','kwtext',text)); return node; }
 
@@ -857,7 +869,7 @@ function sanitize(a){
     case 'keyword': { const t=s(a.text,40).trim(); return t?{t:'keyword',text:t}:null; }
     case 'title': { const t=s(a.text,60).trim(); return t?{t:'title',text:t,sub:s(a.sub,80)}:null; }
     case 'image': { const src=s(a.src,200); return /^assets\/[\w\-./]+$/.test(src)&&!src.includes('..')?{t:'image',src,caption:s(a.caption,60)}:null; }
-    case 'poll': { const o=Array.isArray(a.options)?a.options.slice(0,6).map(x=>s(x,40)).filter(Boolean):[]; return o.length>=2&&a.question?{t:'poll',question:s(a.question,140),options:o,free:!!a.free}:null; }
+    case 'poll': { const o=Array.isArray(a.options)?a.options.slice(0,6).map(x=>s(x,40)).filter(Boolean):[]; const d=Number(a.delay); return o.length>=2&&a.question?{t:'poll',question:s(a.question,140),options:o,free:!!a.free,multi:!!a.multi,delay:Number.isFinite(d)?d:2}:null; }
     case 'scene': return a.id?{t:'scene',id:s(a.id,40)}:null;
     case 'sketch': {
       if(!Array.isArray(a.shapes)) return null;

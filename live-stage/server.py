@@ -87,13 +87,13 @@ class Claude:
 CLAUDE = Claude()
 
 # ---------- التصويت ----------
-POLL = {"id": "", "question": "", "options": [], "counts": [], "texts": [], "free": False, "open": False}
+POLL = {"id": "", "question": "", "options": [], "counts": [], "texts": [], "free": False, "multi": False, "voters": 0, "open": False}
 VOTERS = set()
 PLOCK = threading.Lock()
 
 
 def poll_public():
-    return {k: POLL[k] for k in ("id", "question", "options", "counts", "texts", "free", "open")}
+    return {k: POLL[k] for k in ("id", "question", "options", "counts", "texts", "free", "multi", "voters", "open")}
 
 
 class H(BaseHTTPRequestHandler):
@@ -162,7 +162,8 @@ class H(BaseHTTPRequestHandler):
             opts = [str(o)[:60] for o in (body.get("options") or [])][:6]
             with PLOCK:
                 POLL.update(id=str(body.get("id", time.time()))[:40], question=str(body.get("question", ""))[:200],
-                            options=opts, counts=[0] * len(opts), texts=[], free=bool(body.get("free")), open=True)
+                            options=opts, counts=[0] * len(opts), texts=[], free=bool(body.get("free")),
+                            multi=bool(body.get("multi")), voters=0, open=True)
                 VOTERS.clear()
                 return self._json(poll_public())
 
@@ -181,13 +182,21 @@ class H(BaseHTTPRequestHandler):
                 if not voter or voter in VOTERS:
                     return self._json({"error": "already"}, 409)
                 opt, text = body.get("option"), str(body.get("text") or "").strip()[:140]
-                if isinstance(opt, int) and 0 <= opt < len(POLL["counts"]):
-                    POLL["counts"][opt] += 1
-                elif text and POLL["free"]:
-                    POLL["texts"] = (POLL["texts"] + [text])[-60:]
+                n = len(POLL["counts"])
+                if POLL["multi"] and isinstance(body.get("options"), list):
+                    # اختيار متعدد: كل شخص يختار أكثر من خيار، بس يصوّت مرة وحدة
+                    picked = {o for o in body["options"] if type(o) is int and 0 <= o < n}
                 else:
+                    picked = {opt} if type(opt) is int and 0 <= opt < n else set()
+                text = text if POLL["free"] else ""
+                if not picked and not text:
                     return self._json({"error": "empty"}, 400)
+                for o in picked:
+                    POLL["counts"][o] += 1
+                if text:
+                    POLL["texts"] = (POLL["texts"] + [text])[-60:]
                 VOTERS.add(voter)
+                POLL["voters"] = len(VOTERS)
                 return self._json({"ok": True})
 
         return self._json({"error": "not found"}, 404)
