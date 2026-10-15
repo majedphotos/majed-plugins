@@ -41,7 +41,7 @@ if (deck.context !== undefined && typeof deck.context !== 'string') err('"contex
 if (typeof deck.context === 'string' && deck.context.length > 4000) warn(`"context" طويل (${deck.context.length} حرف)، الصفحة تاخذ أول ٤٠٠٠ بس`);
 
 const ids = new Set();
-const NEEDS_SOURCE = new Set(['counter', 'bars']);
+const NEEDS_SOURCE = new Set(['counter', 'bars', 'reels']);
 function checkShow(i, sh) {
   const n = name(i);
   if (!sh || typeof sh !== 'object') return err(`${n}: "show" فاضي`);
@@ -79,6 +79,11 @@ function checkShow(i, sh) {
       if (!Array.isArray(sh.shapes) || !sh.shapes.length || sh.shapes.length > 30) err(`${n}: sketch يحتاج من ١ إلى ٣٠ شكل`);
       break;
     case 'map': if (!['africa', 'kenya'].includes(sh.region)) err(`${n}: map يدعم africa أو kenya بس`); break;
+    case 'confetti': break;
+    case 'reels':
+      if (!Array.isArray(sh.items) || !sh.items.length || sh.items.length > 4) err(`${n}: reels يحتاج من ١ إلى ٤ بطاقات`);
+      if (sh.total !== undefined && !isNum(sh.total)) err(`${n}: reels "total" لازم يكون رقم`);
+      break;
     default: err(`${n}: نوع رسم مو معروف "${sh.t}"`);
   }
 }
