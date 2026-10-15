@@ -15,8 +15,8 @@
     {
       "name": "majed-video",
       "source": {
-        "source": "github",
-        "repo": "majedphotos/video-ad-editor",
+        "source": "url",
+        "url": "https://github.com/majedphotos/video-ad-editor.git",
         "ref": "v4.6.0"
       },
       "description": "بلقن الفيديو: 5 سكلات — ريل من فيديو كلام، موشن 3D، بودكاست (مع صفحة مراجعة)، مونتاج على الإيقاع، أغلفة وثمبنيل. يشتغل بأي بيئة (لابتوب/جوال/سحابة).",
@@ -25,8 +25,8 @@
     {
       "name": "majed-davinci",
       "source": {
-        "source": "github",
-        "repo": "majedphotos/majed-davinci",
+        "source": "url",
+        "url": "https://github.com/majedphotos/majed-davinci.git",
         "ref": "v1.0.0"
       },
       "description": "إضافة دافنشي ريزولف ستوديو لبلقن الفيديو: تايملاين عمودي تعدّل عليه بإيدك (فيديو ورسم وكابشن كل وحدة على مسارها). يحتاج majed-video منصّب.",
