@@ -17,10 +17,10 @@
       "source": {
         "source": "url",
         "url": "https://github.com/majedphotos/video-ad-editor.git",
-        "ref": "v6.0.1"
+        "ref": "v6.1.0"
       },
       "description": "بلقن الفيديو: 5 سكلات — ريل من فيديو كلام، موشن 3D، بودكاست (مع صفحة مراجعة)، مونتاج على الإيقاع، أغلفة وثمبنيل. يشتغل بأي بيئة (لابتوب/جوال/سحابة).",
-      "version": "6.0.1"
+      "version": "6.1.0"
     },
     {
       "name": "majed-davinci",
