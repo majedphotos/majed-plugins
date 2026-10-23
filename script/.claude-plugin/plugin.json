@@ -1,0 +1,11 @@
+{
+  "name": "majed-script",
+  "version": "1.0.0",
+  "description": "سكل السكربت الإيقاعي: يكتب سكربت ريل يمسك المشاهد لين النهاية — 26 صيغة هوك جاهزة مع هوك الشاشة، الاحتياجات الإنسانية الستة (توني روبنز) زناد لكل هوك، قاعدة العشر ثواني، رموز إلقاء للبرومبتر، ونمط «يابنق» لما تبي تتكلم براحتك. بلهجتك.",
+  "author": { "name": "Majed Alzaabi", "url": "https://github.com/majedphotos" },
+  "homepage": "https://github.com/majedphotos/majed-plugins/tree/main/script",
+  "repository": "https://github.com/majedphotos/majed-plugins/tree/main/script",
+  "license": "MIT",
+  "keywords": ["arabic", "reels", "script", "hooks", "tiktok", "shorts", "teleprompter"],
+  "skills": ["./skill/"]
+}
