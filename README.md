@@ -6,6 +6,7 @@
 |---|---|
 | [`content-engine-v5`](content-engine) | مصنع المحتوى: هويتك، لوحة أخبار، كاروسيل بغلاف مصمم من الخبر، تعريب بوستات انستقرام، نشر بأمر واحد عبر بلوتاتو، ووكلاء: استوديو إعلان المنتجات ومدير الجودة. (مو المنصة الكاملة — هذي أدوات الكاروسيل والنشر بس.) |
 | `majed-video` | 6 سكلات فيديو: ريل من فيديو كلام، موشن 3D، بودكاست، مونتاج على الإيقاع، أغلفة وثمبنيل، ودافنشي ريزولف. المصدر: [majedphotos/video-ad-editor](https://github.com/majedphotos/video-ad-editor). |
+| [`majed-script`](script) | سكل السكربت الإيقاعي للريلز: هوك، ورتم، ووضع «يابنق» للكلام العفوي، بلهجتك. |
 | [`majed-live-stage`](live-stage) | شاشة العرض الحي: عرض يمشي بصوتك، المشاهد تطلع لما تقول عباراتها، وهايكو يرسم وأنت تتكلم، وتصويت الجمهور بالباركود. ومعه سكل يبني العرض ويفحصه. |
 
 ## التثبيت
@@ -14,7 +15,16 @@
 
 **من claude.ai أو تطبيق الديسكتوب** (يوصل الويب والديسكتوب والجوال):
 1. Customize ← Plugins ← Add ← Add marketplace
-2. اكتب: `majedphotos/majed-plugins`
+2. انسخ هذا والصقه (اضغط زر النسخ على يمين المربع):
+
+<div dir="ltr">
+
+```
+majedphotos/majed-plugins
+```
+
+</div>
+
 3. فعّل **Sync automatically**، وأضف البلقن اللي تبيه.
 
 **من الطرفية (Claude Code):**
@@ -23,6 +33,7 @@ claude plugin marketplace add majedphotos/majed-plugins
 claude plugin install content-engine-v5@majed-plugins
 claude plugin install majed-video@majed-plugins
 claude plugin install majed-live-stage@majed-plugins
+claude plugin install majed-script@majed-plugins
 ```
 
 ## ملاحظات
