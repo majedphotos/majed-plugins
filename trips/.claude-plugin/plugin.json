@@ -1,6 +1,6 @@
 {
   "name": "majed-trips",
-  "version": "1.0.2",
+  "version": "1.1.0",
   "description": "مرتب الرحلات (مجاني): يرتب صور أي رحلة من تطبيق الصور بالماك حسب المدينة والفعالية بأسماء من خريطة أبل، ويعرضها بشاشة متحركة تنصوّر، ويسوي ألبوم لكل فعالية يطلع بالآيفون.",
   "author": { "name": "Majed Alzaabi", "url": "https://github.com/majedphotos" },
   "homepage": "https://github.com/majedphotos/majed-plugins/tree/main/trips",

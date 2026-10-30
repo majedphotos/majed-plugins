@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>مراجعة الرحلة</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#F6F1EA;--panel:#fff;--ink:#1F1B16;--mute:#8A8178;--line:#E8E0D5;--accent:#D97757}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--ink);font-family:"IBM Plex Sans Arabic",system-ui,sans-serif;padding:0 16px 120px}
+header{position:sticky;top:0;z-index:2;background:var(--bg);display:flex;align-items:center;justify-content:space-between;gap:12px;padding:18px 0 14px;border-bottom:1px solid var(--line);max-width:980px;margin:0 auto}
+h1{font-size:20px;font-weight:700}
+header p{font-size:13px;color:var(--mute)}
+button{font:inherit;font-size:14px;border:0;border-radius:10px;padding:9px 18px;background:var(--ink);color:#fff;cursor:pointer}
+button.saved{background:#4F8A5B}
+main{max-width:980px;margin:0 auto}
+.day{margin-top:26px}
+.day h2{font-size:15px;color:var(--accent);font-weight:600;margin-bottom:10px}
+.ev{display:grid;grid-template-columns:auto 1fr;gap:14px;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:12px;margin-bottom:10px}
+.ev.skip{opacity:.45}
+.th{display:flex;gap:6px}
+.th img{width:120px;height:120px;object-fit:cover;border-radius:9px;background:#EFE8DE}
+.th .none{width:120px;height:120px;border-radius:9px;background:#EFE8DE;display:grid;place-items:center;color:var(--mute);font-size:12px}
+.meta{display:flex;flex-direction:column;gap:6px;min-width:0}
+.meta input[type=text]{font:inherit;font-size:17px;font-weight:600;border:1px solid var(--line);border-radius:9px;padding:6px 10px;width:100%}
+.meta input[type=text].changed{border-color:var(--accent)}
+.meta small{color:var(--mute);font-size:13px}
+.tags{display:flex;gap:6px;flex-wrap:wrap;font-size:12px}
+.tags span{background:#EFE8DE;border-radius:20px;padding:2px 9px}
+label{font-size:13px;color:var(--mute);display:flex;align-items:center;gap:6px;cursor:pointer}
+@media (max-width:640px){.ev{grid-template-columns:1fr}.th img,.th .none{width:30vw;height:30vw}}
+</style>
+</head>
+<body>
+<header>
+  <div><h1 id="title">مراجعة الرحلة</h1><p>صحّح أي اسم غلط، وشيل الصح عن اللي ما تبيه بالألبومات. الصفحة على جهازك بس.</p></div>
+  <button id="save">احفظ</button>
+</header>
+<main id="list"></main>
+<script>
+const DAYS=['الأحد','الإثنين','الثلاثاء','الأربعاء','الخميس','الجمعة','السبت'];
+const time=s=>s.slice(11,16);
+let data;
+fetch('/data').then(r=>r.json()).then(d=>{
+  data=d;document.getElementById('title').textContent='مراجعة الرحلة · '+d.query;
+  const evs=d.events.slice().sort((a,b)=>a.start<b.start?-1:1);
+  const near=(a,b)=>Math.hypot(a.lat-b.lat,(a.lon-b.lon)*Math.cos(a.lat*Math.PI/180))*111<0.3;
+  const same={};evs.forEach((e,i)=>{const j=evs.findIndex((o,k)=>k<i&&near(o,e));if(j>=0)same[e.id]=String(j+1).padStart(2,'0')});
+  const byDay={};evs.forEach(e=>(byDay[e.start.slice(0,10)]??=[]).push(e));
+  const L=document.getElementById('list');let n=0;
+  const first=new Date(Object.keys(byDay)[0]+'T12:00');
+  Object.keys(byDay).forEach(day=>{
+    const dt=new Date(day+'T12:00'),i=Math.round((dt-first)/864e5);
+    const sec=document.createElement('section');sec.className='day';
+    sec.innerHTML=`<h2>اليوم ${i+1} · ${DAYS[dt.getDay()]} ${dt.getDate()}/${dt.getMonth()+1}</h2>`;
+    byDay[day].forEach(e=>{n++;
+      const el=document.createElement('div');el.className='ev'+(e.skip?' skip':'');el.dataset.id=e.id;
+      const imgs=[0,1].map(k=>`<img src="thumbs/${e.id}-${k}.jpg" onerror="this.outerHTML='<div class=none>بلا صورة</div>'">`).join('');
+      const tags=[e.city,e.airport?'✈ مطار':'',e.stay?'🏨 سكن؟':'',same[e.id]?'📍 نفس مكان '+same[e.id]+' — نفس الاسم يدمجهم':'',e.name_en].filter(Boolean).map(t=>`<span>${t}</span>`).join('');
+      el.innerHTML=`<div class="th">${imgs}</div><div class="meta">
+        <input type="text" value="${e.name.replace(/"/g,'&quot;')}">
+        <small>${String(n).padStart(2,'0')} · ${time(e.start)}–${time(e.end)} · ${e.count} ملف</small>
+        <div class="tags">${tags}</div>
+        <label><input type="checkbox" ${e.skip?'':'checked'}> بالألبومات</label></div>`;
+      const inp=el.querySelector('input[type=text]'),cb=el.querySelector('input[type=checkbox]');
+      inp.oninput=()=>{inp.classList.toggle('changed',inp.value!==e.name);dirty()};
+      cb.onchange=()=>{el.classList.toggle('skip',!cb.checked);dirty()};
+      sec.appendChild(el)});
+    L.appendChild(sec)});
+});
+const btn=document.getElementById('save');
+function dirty(){btn.textContent='احفظ';btn.classList.remove('saved')}
+btn.onclick=async()=>{
+  const edits={};document.querySelectorAll('.ev').forEach(el=>{edits[el.dataset.id]={name:el.querySelector('input[type=text]').value,skip:!el.querySelector('input[type=checkbox]').checked}});
+  const r=await fetch('/save',{method:'POST',body:JSON.stringify(edits)});
+  if(r.ok){btn.textContent='انحفظ ✓';btn.classList.add('saved');document.querySelectorAll('input.changed').forEach(i=>i.classList.remove('changed'))}
+};
+</script>
+</body>
+</html>

@@ -157,7 +157,7 @@ function groupsFor(mode,files){
     const f=files[g.ids[0]];
     if(mode==='date'&&g.k!=='غيرها'){const d=new Date(g.k+'T12:00');g.title=`${DAYN[d.getDay()]} ${d.getDate()}/${d.getMonth()+1}`;g.sub=g.k}
     else if(mode==='spot'){const ds=[...new Set(g.ids.map(i=>files[i].date))].sort();g.title=g.k;g.sub=f.place+' · '+ds[0].slice(5).split('-').reverse().join('/')}
-    else{g.title=g.k;g.sub=mode==='place'?(f.placeSub||''):mode==='cam'?'Camera Model':mode==='type'?(g.k==='فيديو'?'MOV · MP4':g.k==='RAW'?'ARW · NEF · DNG':'JPG · HEIC'):''}
+    else{g.title=g.k;g.sub=mode==='place'?(f.placeSub||''):mode==='cam'?'Camera Model':mode==='type'?(g.k==='فيديو'?'MOV · MP4':g.k==='RAW'?'ARW · NEF · DNG':g.k==='لقطة شاشة'?'PNG':'JPG · HEIC'):''}
   });
   return gs;
 }

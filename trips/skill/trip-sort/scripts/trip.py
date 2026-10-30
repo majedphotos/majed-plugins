@@ -138,8 +138,11 @@ def events(a):
         for i in e['ids']: by_id[i] = k
     # same place visited twice (the hotel) → one event
     merged = {}
+    def km(a, b): return math.hypot(a['lat'] - b['lat'], (a['lon'] - b['lon']) * math.cos(math.radians(a['lat']))) * 111
     for ev in out:
         key = ev['name_en']
+        if key not in merged:
+            key = next((k for k, m in merged.items() if km(m, ev) < 0.3), key)
         if key in merged:
             m = merged[key]; m['count'] += ev['count']; m['end'] = max(m['end'], ev['end'])
             for i, k in list(by_id.items()):
@@ -185,26 +188,106 @@ def page(a):
     subprocess.run(['osascript', '-e', f'open location "{url}"'])
 
 
-# ---------- 4) albums ----------
+# ---------- 4) thumbs + review ----------
+def thumbs(a):
+    """Export a couple of photos per event, shrink them, delete the big export (private, for the owner's eyes only)."""
+    import random
+    data = load(a.work)
+    out = os.path.join(a.work, 'review', 'thumbs'); os.makedirs(out, exist_ok=True)
+    if a.fresh:
+        for f in os.listdir(out): os.remove(os.path.join(out, f))
+    tmp = tempfile.mkdtemp()
+    for ev in sorted(data['events'], key=lambda e: e['start']):
+        if all(os.path.exists(os.path.join(out, f'{ev["id"]}-{k}.jpg')) for k in range(a.per)): continue
+        mine = [r for r in data['files'] if r.get('ev') == ev['id']]
+        photos = [r for r in mine if r['f'].lower().endswith(('.heic', '.jpg', '.jpeg'))]
+        pool = photos if len(photos) >= a.per else photos + [r for r in mine if r not in photos]
+        # one random pick from each slice of the event, so the two don't come from the same burst
+        n = min(a.per, len(pool))
+        pick = [random.choice(pool[k * len(pool) // n:(k + 1) * len(pool) // n]) for k in range(n)]
+        if not pick: continue
+        items = ', '.join(f'media item id "{esc(r["id"])}"' for r in pick)
+        osa(f'tell application "Photos" to export {{{items}}} to (POSIX file "{tmp}" as alias) without using originals')
+        for k, r in enumerate(pick):
+            stem = os.path.splitext(r['f'])[0]
+            src = next((os.path.join(tmp, f) for f in os.listdir(tmp) if os.path.splitext(f)[0] == stem), None)
+            if not src: continue
+            dst = os.path.join(out, f'{ev["id"]}-{k}.jpg')
+            if src.lower().endswith(('.mov', '.mp4', '.m4v')):  # a video: let Quick Look draw its poster frame
+                subprocess.run(['qlmanage', '-t', '-s', '420', '-o', tmp, src], capture_output=True)
+                png = src + '.png'
+                if os.path.exists(png):
+                    subprocess.run(['sips', '-s', 'format', 'jpeg', png, '--out', dst], capture_output=True); os.remove(png)
+            else:
+                subprocess.run(['sips', '-Z', '420', '-s', 'format', 'jpeg', src, '--out', dst], capture_output=True)
+            os.remove(src)
+        print(f'  ✓ {ev["name"]}', flush=True)
+    shutil.rmtree(tmp, ignore_errors=True)
+
+
+def review(a):
+    """Local page: the trip day by day, real thumbs, editable names. Saves straight into trip.json."""
+    import http.server
+    site = os.path.join(a.work, 'review'); os.makedirs(site, exist_ok=True)
+    shutil.copy(os.path.join(ASSETS, 'review.html'), os.path.join(site, 'index.html'))
+    work = a.work
+
+    class H(http.server.SimpleHTTPRequestHandler):
+        def __init__(self, *x, **k): super().__init__(*x, directory=site, **k)
+        def log_message(self, *x): pass
+        def do_GET(self):
+            if self.path.startswith('/data'):
+                body = json.dumps(load(work), ensure_ascii=False).encode()
+                self.send_response(200); self.send_header('Content-Type', 'application/json'); self.end_headers(); self.wfile.write(body)
+            else: super().do_GET()
+        def do_POST(self):
+            edits = json.loads(self.rfile.read(int(self.headers['Content-Length'])))
+            data = load(work)
+            for ev in data['events']:
+                e = edits.get(str(ev['id']))
+                if e: ev['name'] = e['name'].strip() or ev['name']; ev['skip'] = bool(e.get('skip'))
+            save(work, data)
+            self.send_response(200); self.end_headers(); self.wfile.write(b'ok')
+
+    for port in range(a.port, a.port + 20):  # another app may already own the port
+        try: srv = http.server.ThreadingHTTPServer(('127.0.0.1', port), H); break
+        except OSError: continue
+    url = f'http://localhost:{port}/'
+    print(url, flush=True)
+    subprocess.run(['open', url])
+    srv.serve_forever()
+
+
+# ---------- 5) albums ----------
 def albums(a):
     data = load(a.work)
-    only = {s.strip() for s in a.only.split(',')} if a.only else None
-    groups = {}
-    for r in data['files']:
-        ev = next((e for e in data['events'] if e['id'] == r.get('ev')), None)
-        if not ev or (a.no_airports and ev['airport']): continue
-        if only and ev['name'] not in only: continue
-        groups.setdefault(ev['name'], []).append(r['id'])
-    script = [f'tell application "Photos"',
-              f'if not (exists folder "{esc(a.folder)}") then make new folder named "{esc(a.folder)}"',
-              f'set fo to folder "{esc(a.folder)}"']
-    for name, ids in groups.items():
-        items = ', '.join(f'media item id "{esc(i)}"' for i in ids)
-        script += [f'if not (exists album "{esc(name)}" of fo) then make new album named "{esc(name)}" at fo',
-                   f'add {{{items}}} to album "{esc(name)}" of fo']
+    only = {x.strip() for x in a.only.split(',')} if a.only else None
+    evs = sorted((e for e in data['events'] if not e.get('skip') and not (a.no_airports and e['airport'])
+                  and (not only or e['name'] in only)), key=lambda e: e['start'])
+    keep = {e['id'] for e in evs}
+    names, by_name = [], {}
+    for e in evs:
+        if e['name'] not in by_name: names.append(e['name']); by_name[e['name']] = set()
+        by_name[e['name']].add(e['id'])
+    by_ev = {n: [r['id'] for r in data['files'] if r.get('ev') in ids] for n, ids in by_name.items()}
+    whole = [r['id'] for r in data['files'] if r.get('ev') in keep]  # files are already in time order
+    fo = esc(a.folder)
+    script = ['tell application "Photos"',
+              f'if not (exists folder "{fo}") then make new folder named "{fo}"',
+              f'set fo to folder "{fo}"']
+    def add(name, ids):
+        n = esc(name)
+        script.append(f'if not (exists album "{n}" of fo) then make new album named "{n}" at fo')
+        for i in range(0, len(ids), 200):
+            items = ', '.join(f'media item id "{esc(x)}"' for x in ids[i:i + 200])
+            script.append(f'add {{{items}}} to album "{n}" of fo')
+    if not only: add(a.whole, whole)
+    for k, n in enumerate(names, 1):
+        add(f'{k:02d} · {n}', by_ev[n])
     script.append('end tell')
     osa('\n'.join(script), timeout=1800)
-    for name, ids in groups.items(): print(f'  {len(ids):4d}  {a.folder} ← {name}')
+    if not only: print(f'  {len(whole):4d}  {a.folder} ← {a.whole}')
+    for k, n in enumerate(names, 1): print(f'  {len(by_ev[n]):4d}  {a.folder} ← {k:02d} · {n}')
 
 
 def main():
@@ -216,7 +299,11 @@ def main():
     p.add_argument('--km', type=float, default=2); p.add_argument('--min', type=int, default=10); p.set_defaults(fn=events)
     p = sp.add_parser('page'); p.add_argument('work'); p.add_argument('--shape', default='')
     p.add_argument('--name'); p.add_argument('--no-airports', action='store_true'); p.set_defaults(fn=page)
+    p = sp.add_parser('thumbs'); p.add_argument('work'); p.add_argument('--per', type=int, default=2)
+    p.add_argument('--fresh', action='store_true', help='اختار صور جديدة'); p.set_defaults(fn=thumbs)
+    p = sp.add_parser('review'); p.add_argument('work'); p.add_argument('--port', type=int, default=8790); p.set_defaults(fn=review)
     p = sp.add_parser('albums'); p.add_argument('work'); p.add_argument('--folder', required=True)
+    p.add_argument('--whole', default='الرحلة كاملة')
     p.add_argument('--only'); p.add_argument('--no-airports', action='store_true'); p.set_defaults(fn=albums)
     a = ap.parse_args(); a.fn(a)
 
