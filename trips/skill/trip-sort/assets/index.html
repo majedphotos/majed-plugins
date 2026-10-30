@@ -239,8 +239,8 @@ function setTab(){document.querySelectorAll('.tab').forEach(b=>b.classList.toggl
 async function gather(id){
   const n=tiles.length,order=[...tiles.keys()].sort(()=>Math.random()-.5);
   document.getElementById('clabel').style.opacity=1;
-  order.forEach((ti,k)=>{const t=tiles[ti];tween(t,now=>(shape?shapePos:circlePos)(k,n,now),900,(k/n)*900)});
-  await wait(shape?2900:2100);if(id!==runId)return false;return true;
+  order.forEach((ti,k)=>{const t=tiles[ti];tween(t,now=>(shape?shapePos:circlePos)(k,n,now),1400,(k/n)*1600)});
+  await wait(shape?4600:3800);if(id!==runId)return false;return true;
 }
 async function sort(id){
   groups=groupsFor(mode,files);buildCards(groups);setTab();log(LOGS[mode]);
@@ -249,10 +249,10 @@ async function sort(id){
   await wait(400);if(id!==runId)return;
   const seq=[];groups.forEach((g,gi)=>g.ids.forEach((ti,j)=>seq.push({g,ti,j})));
   seq.sort(()=>Math.random()-.5);
-  const span=3200;
+  const span=7000;  // the whole run lasts about 15 s, long enough for one reel shot
   setTimeout(()=>{if(id===runId)drawViz()},span+700);
   seq.forEach(({g,ti,j},k)=>{const t=tiles[ti];const d=(k/seq.length)*span;
-    tween(t,cellPos(g,j),1000,d);t.tw.onDone=()=>{g.c=(g.c||0)+1;const n=g.el.querySelector('.n');n.textContent=g.c;g.el.classList.add('hot');clearTimeout(g.h);g.h=setTimeout(()=>g.el.classList.remove('hot'),250)}});
+    tween(t,cellPos(g,j),1400,d);t.tw.onDone=()=>{g.c=(g.c||0)+1;const n=g.el.querySelector('.n');n.textContent=g.c;g.el.classList.add('hot');clearTimeout(g.h);g.h=setTimeout(()=>g.el.classList.remove('hot'),250)}});
 }
 const wait=ms=>new Promise(r=>setTimeout(r,ms));
 const splitLabel=t=>{const sp=t.indexOf(' ');return sp>0?[t.slice(0,sp),t.slice(sp+1)]:[t]};
