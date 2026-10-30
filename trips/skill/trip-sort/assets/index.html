@@ -1,0 +1,366 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ترتيب التصوير</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/exifr@7.1.3/dist/full.umd.js"></script>
+<style>
+:root{
+  --bg:#F6F1EA; --panel:#FFFFFF; --ink:#1F1B16; --mute:#8A8178; --line:#E8E0D5;
+  --accent:#D97757;--colw:clamp(230px,23vw,330px); --accent-soft:#F7E3D9; --ok:#4F8A5B;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;overflow:hidden}
+body{background:var(--bg);color:var(--ink);font-family:"IBM Plex Sans Arabic",system-ui,sans-serif}
+.app{position:fixed;inset:0;display:grid;grid-template-rows:64px 104px 1fr 44px}
+header{display:flex;align-items:center;justify-content:space-between;padding:0 28px;border-bottom:1px solid var(--line);background:#FBF8F4}
+.brand{display:flex;align-items:center;gap:12px;font-weight:600;font-size:17px}
+.dot{width:26px;height:26px;border-radius:7px;background:var(--accent);display:grid;place-items:center;color:#fff;font-size:15px}
+.path{font-family:"IBM Plex Mono",monospace;font-weight:400;font-size:14px;color:var(--mute);direction:ltr}
+.tabs{display:flex;gap:6px;background:#EFE8DE;padding:4px;border-radius:12px}
+.tab{border:0;background:transparent;font:inherit;font-size:14px;font-weight:500;padding:7px 16px;border-radius:9px;color:var(--mute);cursor:pointer}
+.tab.on{background:#fff;color:var(--ink);box-shadow:0 1px 3px rgba(0,0,0,.08)}
+.tools{display:flex;gap:8px;align-items:center}
+.btn{border:1px solid var(--line);background:#fff;font:inherit;font-size:13px;padding:7px 14px;border-radius:9px;cursor:pointer;color:var(--ink)}
+.btn.main{background:var(--ink);color:#fff;border-color:var(--ink)}
+.stats{display:grid;grid-template-columns:repeat(6,1fr);gap:14px;padding:16px 28px}
+.stat{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:12px 16px}
+.stat b{display:block;font-size:28px;font-weight:600;font-variant-numeric:tabular-nums;line-height:1.15}
+.stat span{font-size:13px;color:var(--mute)}
+.stat.hl b{color:var(--accent)}
+main{position:relative;margin:0 28px}
+.col{position:absolute;top:0;bottom:12px;width:var(--colw);display:flex;flex-direction:column;gap:10px}
+.col.r{right:0}.col.l{left:0}
+.card{flex:1;max-height:150px;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:10px 12px;display:flex;flex-direction:column;opacity:0;transform:translateY(8px);transition:opacity .5s,transform .5s,border-color .4s}
+.card.on{opacity:1;transform:none}
+.card.hot{border-color:var(--accent)}
+.card h4{display:flex;align-items:center;justify-content:space-between;font-size:14px;font-weight:600}
+.card h4 .n{font-family:"IBM Plex Mono",monospace;font-size:13px;color:var(--accent);font-weight:500}
+.card small{font-size:11.5px;color:var(--mute);text-align:right}
+.card .grid{flex:1;margin-top:6px;position:relative}
+.center-label{position:absolute;left:50%;transform:translateX(-50%);bottom:18px;font-size:13px;color:var(--mute);transition:opacity .4s}
+footer{display:flex;align-items:center;gap:12px;padding:0 28px;border-top:1px solid var(--line);background:#FBF8F4;font-family:"IBM Plex Sans Arabic",sans-serif;font-size:14px;color:#5C544B;direction:rtl}
+footer .p{color:var(--accent)}
+#log{white-space:nowrap;overflow:hidden}
+#stage{position:fixed;inset:0;pointer-events:none;z-index:5}
+.t{position:absolute;left:0;top:0;width:24px;height:24px;border-radius:4px;background-size:cover;background-position:center;box-shadow:0 1px 2px rgba(0,0,0,.25),0 0 0 1.5px #fff;will-change:transform;opacity:0}
+.blur .t{filter:blur(2.5px)}
+input[type=file]{display:none}
+#viz{position:absolute;top:0;bottom:12px;left:calc(var(--colw) + 20px);right:calc(var(--colw) + 20px);opacity:0;transition:opacity .7s;display:flex;flex-direction:column}
+#viz.on{opacity:1}
+#viz h3{font-size:14px;font-weight:600;color:var(--mute);text-align:center;margin:6px 0 4px}
+#viz svg{flex:1;width:100%;direction:ltr}
+.pin text{font-family:"IBM Plex Sans Arabic";font-size:15px;font-weight:600;fill:var(--ink)}
+.pin .c{font-family:"IBM Plex Sans Arabic";font-size:12px;fill:var(--accent);font-weight:500}
+.route{fill:none;stroke:var(--accent);stroke-width:2;stroke-dasharray:5 6;opacity:.8}
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <div class="brand"><div class="dot">✳</div>Claude Code <span class="path" id="path">~/Trips/thailand-oct/</span></div>
+    <div class="tabs" id="tabs">
+      <button class="tab" data-m="place">📍 المدينة</button>
+      <button class="tab" data-m="spot">🎡 الفعاليات</button>
+      <button class="tab" data-m="date">📅 التاريخ</button>
+      <button class="tab" data-m="cam">📷 الكاميرا</button>
+      <button class="tab" data-m="type">🎞️ النوع</button>
+    </div>
+    <div class="tools">
+      <button class="btn" id="open">افتح مجلد</button>
+      <button class="btn main" id="go">رتّب</button>
+    </div>
+  </header>
+  <section class="stats">
+    <div class="stat hl"><b id="s-files">0</b><span>ملف</span></div>
+    <div class="stat"><b id="s-photos">0</b><span>صورة</span></div>
+    <div class="stat"><b id="s-videos">0</b><span>فيديو</span></div>
+    <div class="stat"><b id="s-places">0</b><span>مكان</span></div>
+    <div class="stat"><b id="s-days">0</b><span>يوم</span></div>
+    <div class="stat"><b id="s-time">0.0</b><span>ثانية قراءة</span></div>
+  </section>
+  <main id="main">
+    <div class="col r" id="colR"></div>
+    <div class="col l" id="colL"></div>
+    <div id="viz"></div>
+    <div class="center-label" id="clabel">يقرا بيانات كل ملف… بدون ما يفتح الصورة</div>
+  </main>
+  <footer><span class="p">❯</span><span id="log">جاهز</span></footer>
+</div>
+<div id="stage"></div>
+<input type="file" id="picker" webkitdirectory multiple>
+<script src="trip-data.js"></script>
+<script>
+// ---------- procedural thumbnails (no people, ever) ----------
+const R=(a,b)=>a+Math.random()*(b-a);
+function thumb(kind,video){
+  const c=document.createElement('canvas');c.width=c.height=64;const g=c.getContext('2d');
+  const sky=(a,b)=>{const l=g.createLinearGradient(0,0,0,64);l.addColorStop(0,a);l.addColorStop(1,b);g.fillStyle=l;g.fillRect(0,0,64,64)};
+  if(kind==='kwt'){ // plane window / airport
+    sky('#9CC3E6','#E8F0F7');g.fillStyle='#fff';for(let i=0;i<5;i++){g.beginPath();g.ellipse(R(0,64),R(30,56),R(10,20),R(4,8),0,0,7);g.fill()}
+    g.fillStyle='#C9CED6';g.beginPath();g.moveTo(0,R(20,34));g.lineTo(64,R(40,50));g.lineTo(64,56);g.lineTo(0,46);g.fill();
+  }else if(kind==='bkk'){ // city dusk
+    sky(['#3B2A5C','#6B3A5E','#2B3550'][~~R(0,3)],'#F09A5B');
+    for(let x=0;x<64;x+=R(6,11)){const h=R(14,44),w=R(5,10);g.fillStyle='#1E1A2B';g.fillRect(x,64-h,w,h);g.fillStyle='#F7C66B';for(let k=0;k<8;k++)if(Math.random()<.5)g.fillRect(x+R(1,w-2),64-R(2,h-2),1.5,1.5)}
+  }else if(kind==='cnx'){ // temple + misty hills
+    sky('#D9E3D3','#EEF0E4');g.fillStyle='#8FAE8B';g.beginPath();g.moveTo(0,40);for(let x=0;x<=64;x+=8)g.lineTo(x,R(26,40));g.lineTo(64,64);g.lineTo(0,64);g.fill();
+    g.fillStyle='#4E7550';g.fillRect(0,50,64,14);const x=R(14,40);g.fillStyle='#D4A13A';g.beginPath();g.moveTo(x,22);g.lineTo(x+12,50);g.lineTo(x-12,50);g.fill();g.fillRect(x-1,14,2,10);
+  }else if(kind==='hkt'){ // beach
+    sky('#5FB3E6','#BFE3F5');g.fillStyle='#1E8FB0';g.fillRect(0,R(30,38),64,20);g.fillStyle='#3FC0C8';g.fillRect(0,46,64,6);g.fillStyle='#EBD7A8';g.fillRect(0,R(50,54),64,14);
+    if(Math.random()<.5){g.fillStyle='#2E5E2E';g.fillRect(R(6,56),18,2,34)}
+  }else{ // krabi cliffs
+    sky('#7CC4E4','#D8EEF5');g.fillStyle='#29B4B0';g.fillRect(0,40,64,24);g.fillStyle='#5D7A4A';
+    for(let i=0;i<3;i++){const x=R(-6,56),w=R(10,20),h=R(18,34);g.beginPath();g.moveTo(x,42);g.quadraticCurveTo(x,42-h,x+w/2,42-h);g.quadraticCurveTo(x+w,42-h,x+w,42);g.fill()}
+  }
+  if(video){g.fillStyle='rgba(0,0,0,.35)';g.fillRect(0,0,64,64);g.fillStyle='#fff';g.beginPath();g.moveTo(25,20);g.lineTo(43,32);g.lineTo(25,44);g.fill()}
+  return c.toDataURL('image/jpeg',.8);
+}
+const PLACES=[
+  {k:'kwt',name:'الكويت · المطار',gps:'29.24°N 47.97°E',lat:29.24,lon:47.97},
+  {k:'bkk',name:'بانكوك',gps:'13.75°N 100.50°E',lat:13.75,lon:100.5},
+  {k:'cnx',name:'شيانغ ماي',gps:'18.79°N 98.98°E',lat:18.79,lon:98.98},
+  {k:'hkt',name:'بوكيت',gps:'7.88°N 98.39°E',lat:7.88,lon:98.39},
+  {k:'kbv',name:'كرابي',gps:'8.09°N 98.91°E',lat:8.09,lon:98.91},
+];
+const POOL={};PLACES.forEach(p=>{POOL[p.k]={p:[...Array(10)].map(()=>thumb(p.k,0)),v:[...Array(5)].map(()=>thumb(p.k,1))}});
+
+// ---------- demo dataset: one trip ----------
+function demoData(){
+  const plan=[['kwt',10,24],['bkk',10,60],['bkk',11,95],['bkk',12,70],['cnx',13,85],['cnx',14,70],['hkt',15,90],['hkt',16,75],['kbv',17,80],['kwt',17,18]];
+  const out=[];
+  plan.forEach(([pk,day,n])=>{for(let i=0;i<n;i++){
+    const r=Math.random();
+    let cam=r<.52?'iPhone 17 Pro':r<.78?'Nikon Z8':r<.9?'DJI Mini 4 Pro':'GoPro HERO13';
+    if(pk==='kwt')cam='iPhone 17 Pro';
+    const video=cam==='GoPro HERO13'||cam==='DJI Mini 4 Pro'?Math.random()<.7:Math.random()<.22;
+    const raw=!video&&cam==='Nikon Z8'&&Math.random()<.8;
+    const place=PLACES.find(p=>p.k===pk);
+    out.push({img:POOL[pk][video?'v':'p'][~~R(0,video?5:10)],place:place.name,placeSub:place.gps,lat:place.lat,lon:place.lon,date:`2026-10-${day}`,cam,type:video?'فيديو':raw?'RAW':'صورة',video});
+  }});
+  return out;
+}
+
+// ---------- grouping ----------
+const DAYN=['الأحد','الإثنين','الثلاثاء','الأربعاء','الخميس','الجمعة','السبت'];
+function groupsFor(mode,files){
+  const key=f=>mode==='spot'?(f.ev||f.place):mode==='place'?f.place:mode==='date'?f.date:mode==='cam'?f.cam:f.type;
+  const m=new Map();files.forEach((f,i)=>{const k=key(f);if(!m.has(k))m.set(k,[]);m.get(k).push(i)});
+  let gs=[...m.entries()].map(([k,ids])=>({k,ids}));
+  if(mode==='date')gs.sort((a,b)=>a.k<b.k?-1:1);else if(mode!=='place')gs.sort((a,b)=>b.ids.length-a.ids.length);
+  if(gs.length>10){const rest=gs.slice(9);gs=gs.slice(0,9);gs.push({k:'غيرها',ids:rest.flatMap(g=>g.ids)})}
+  gs.forEach(g=>{
+    const f=files[g.ids[0]];
+    if(mode==='date'&&g.k!=='غيرها'){const d=new Date(g.k+'T12:00');g.title=`${DAYN[d.getDay()]} ${d.getDate()}/${d.getMonth()+1}`;g.sub=g.k}
+    else if(mode==='spot'){const ds=[...new Set(g.ids.map(i=>files[i].date))].sort();g.title=g.k;g.sub=f.place+' · '+ds[0].slice(5).split('-').reverse().join('/')}
+    else{g.title=g.k;g.sub=mode==='place'?(f.placeSub||''):mode==='cam'?'Camera Model':mode==='type'?(g.k==='فيديو'?'MOV · MP4':g.k==='RAW'?'ARW · NEF · DNG':'JPG · HEIC'):''}
+  });
+  return gs;
+}
+
+// ---------- tween engine ----------
+const stage=document.getElementById('stage');let tiles=[],files=[];
+const ease=t=>t<.5?4*t*t*t:1-Math.pow(-2*t+2,3)/2;
+function makeTiles(){
+  stage.innerHTML='';tiles=files.map(f=>{const el=document.createElement('div');el.className='t';el.style.backgroundImage=`url("${f.img}")`;stage.appendChild(el);
+    return{el,x:innerWidth/2,y:innerHeight/2,s:1,r:0,o:0,tw:null}});
+}
+function tween(t,to,dur,delay){const now=performance.now();t.tw={fx:t.x,fy:t.y,fs:t.s,fr:t.r,fo:t.o,to,t0:now+delay,dur}}
+let swirl=null;
+function frame(now){
+  const W=innerWidth,H=innerHeight;
+  for(const t of tiles){
+    if(t.tw){const p=Math.min(1,Math.max(0,(now-t.tw.t0)/t.tw.dur)),e=ease(p);let to=t.tw.to;if(typeof to==='function')to=to(now);
+      t.x=t.tw.fx+(to.x-t.tw.fx)*e;t.y=t.tw.fy+(to.y-t.tw.fy)*e;t.s=t.tw.fs+(to.s-t.tw.fs)*e;t.r=t.tw.fr+(to.r-t.tw.fr)*e;t.o=t.tw.fo+((to.o??1)-t.tw.fo)*e;
+      if(p>=1&&typeof t.tw.to!=='function'){if(t.tw.onDone)t.tw.onDone();t.tw=null}}
+    t.el.style.transform=`translate(${t.x-12}px,${t.y-12}px) rotate(${t.r}deg) scale(${t.s})`;t.el.style.opacity=t.o;
+  }
+  requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
+
+// ---------- layout helpers ----------
+function circleCenter(){const r=document.getElementById('main').getBoundingClientRect();const cw=document.getElementById('colR').offsetWidth;return{x:r.left+r.width/2,y:r.top+r.height/2-10,rad:Math.min(r.height*.42,(r.width-2*cw-40)/2)}}
+const GA=Math.PI*(3-Math.sqrt(5));
+let shape=(new URLSearchParams(location.search).get('shape')||'').trim(),shapeCache=null;if(shape==='circle')shape='';
+function shapePoints(n){
+  const c=circleCenter(),H=Math.round(c.rad*2.15),W=Math.round(Math.min(H*1.5,c.rad*2.3)),key=[shape,n,W,H].join();
+  if(shapeCache&&shapeCache.key===key)return shapeCache.pts;
+  const cv=document.createElement('canvas');cv.width=W;cv.height=H;const g=cv.getContext('2d');
+  let fs=H;g.font=`700 ${fs}px "IBM Plex Sans Arabic",sans-serif`;const mw=g.measureText(shape).width;if(mw>W*.96){fs*=W*.96/mw;g.font=`700 ${fs}px "IBM Plex Sans Arabic",sans-serif`}
+  g.textAlign='center';g.textBaseline='middle';g.fillText(shape,W/2,H/2+fs*.05);
+  const d=g.getImageData(0,0,W,H).data;let step=24,pts=[];
+  for(;step>=3;step-=1){pts=[];for(let y=step/2;y<H;y+=step)for(let x=step/2;x<W;x+=step)if(d[(~~y*W+~~x)*4+3]>128)pts.push({x:x+c.x-W/2,y:y+c.y-H/2});if(pts.length>=n*.8)break}
+  pts.sort(()=>Math.random()-.5);
+  shapeCache={key,pts};return pts;
+}
+function shapePos(i,n,now){const pts=shapePoints(n);if(!pts.length)return circlePos(i,n,now);const p=pts[i%pts.length],o=i>=pts.length?6:0;
+  return{x:p.x+Math.sin(now/700+i)*1.5+o,y:p.y+Math.cos(now/800+i*1.7)*1.5+o,s:1,r:Math.sin(i)*6,o:1}}
+function circlePos(i,n,now){const c=circleCenter();const rr=c.rad*Math.sqrt((i+.5)/n);const a=i*GA+now/2600*(1-rr/c.rad*.55);return{x:c.x+Math.cos(a)*rr,y:c.y+Math.sin(a)*rr,s:1,r:(i*37)%30-15,o:1}}
+
+// ---------- cards ----------
+let groups=[],counts=[];
+function buildCards(gs){
+  const R=document.getElementById('colR'),L=document.getElementById('colL');R.innerHTML=L.innerHTML='';
+  const half=Math.ceil(gs.length/2);
+  gs.forEach((g,i)=>{const c=document.createElement('div');c.className='card';c.innerHTML=`<h4><span>${g.title}</span><span class="n">0</span></h4><small>${g.sub||''}</small><div class="grid"></div>`;(i<half?R:L).appendChild(c);g.el=c});
+  // fill empty slots so cards keep a steady height
+  [R,L].forEach(col=>{for(let k=col.children.length;k<Math.max(4,half);k++){const s=document.createElement('div');s.className='card';s.style.visibility='hidden';col.appendChild(s)}});
+}
+function cellPos(g,j){
+  const r=g.el.querySelector('.grid').getBoundingClientRect();const sz=15,gap=3,cols=Math.max(1,Math.floor((r.width+gap)/(sz+gap))),rows=Math.max(1,Math.floor((r.height+gap)/(sz+gap)));
+  const cap=cols*rows;const k=j<cap?j:(j*7919)%cap;const cx=k%cols,cy=Math.floor(k/cols);
+  return{x:r.right-sz/2-cx*(sz+gap),y:r.top+sz/2+cy*(sz+gap),s:sz/24,r:0,o:1};
+}
+
+// ---------- counters / stats ----------
+function countUp(el,to,ms,fmt=v=>Math.round(v).toLocaleString('en-US')){const t0=performance.now();(function f(n){const p=Math.min(1,(n-t0)/ms);el.textContent=fmt(to*ease(p));if(p<1)requestAnimationFrame(f)})(t0)}
+function setStats(sec){
+  countUp(document.getElementById('s-files'),files.length,1600);
+  countUp(document.getElementById('s-photos'),files.filter(f=>!f.video).length,1600);
+  countUp(document.getElementById('s-videos'),files.filter(f=>f.video).length,1600);
+  countUp(document.getElementById('s-places'),new Set(files.map(f=>f.place)).size,1600);
+  countUp(document.getElementById('s-days'),new Set(files.map(f=>f.date)).size,1600);
+  countUp(document.getElementById('s-time'),sec,1600,v=>v.toFixed(1));
+}
+let logTimer;function log(s){clearInterval(logTimer);const el=document.getElementById('log');let i=0;el.textContent='';logTimer=setInterval(()=>{el.textContent=s.slice(0,++i);if(i>=s.length)clearInterval(logTimer)},18)}
+
+// ---------- sequence ----------
+let mode='place',runId=0;
+const LOGS={spot:'جمعت الملفات اللي انخذت بنفس المكان ونفس الوقت ← وخريطة أبل عطتني اسم المكان',place:'قرأت إحداثيات GPS من كل ملف ← حوّلتها لأسماء مدن ← مجلد لكل مكان',
+  date:'قرأت تاريخ الالتقاط من بيانات الملف ← مجلد لكل يوم من الرحلة',
+  cam:'قرأت موديل الكاميرا من بيانات الملف ← مجلد لكل كاميرا',
+  type:'فرزت حسب نوع الملف ← صور · RAW · فيديو'};
+function setTab(){document.querySelectorAll('.tab').forEach(b=>b.classList.toggle('on',b.dataset.m===mode))}
+async function gather(id){
+  const n=tiles.length,order=[...tiles.keys()].sort(()=>Math.random()-.5);
+  document.getElementById('clabel').style.opacity=1;
+  order.forEach((ti,k)=>{const t=tiles[ti];tween(t,now=>(shape?shapePos:circlePos)(k,n,now),900,(k/n)*900)});
+  await wait(shape?2900:2100);if(id!==runId)return false;return true;
+}
+async function sort(id){
+  groups=groupsFor(mode,files);buildCards(groups);setTab();log(LOGS[mode]);
+  document.getElementById('clabel').style.opacity=0;
+  groups.forEach((g,gi)=>setTimeout(()=>g.el.classList.add('on'),gi*90));
+  await wait(400);if(id!==runId)return;
+  const seq=[];groups.forEach((g,gi)=>g.ids.forEach((ti,j)=>seq.push({g,ti,j})));
+  seq.sort(()=>Math.random()-.5);
+  const span=3200;
+  setTimeout(()=>{if(id===runId)drawViz()},span+700);
+  seq.forEach(({g,ti,j},k)=>{const t=tiles[ti];const d=(k/seq.length)*span;
+    tween(t,cellPos(g,j),1000,d);t.tw.onDone=()=>{g.c=(g.c||0)+1;const n=g.el.querySelector('.n');n.textContent=g.c;g.el.classList.add('hot');clearTimeout(g.h);g.h=setTimeout(()=>g.el.classList.remove('hot'),250)}});
+}
+const wait=ms=>new Promise(r=>setTimeout(r,ms));
+const splitLabel=t=>{const sp=t.indexOf(' ');return sp>0?[t.slice(0,sp),t.slice(sp+1)]:[t]};
+function barLabel(t,x,y,fs){
+  const lines=splitLabel(t);
+  return lines.map((l,i)=>`<text x="${x}" y="${y+i*(fs+3)}" text-anchor="middle" style="font-size:${fs.toFixed(1)}px;font-weight:${i?500:600}">${l}</text>`).join('');
+}
+function drawViz(){
+  const v=document.getElementById('viz'),r=v.getBoundingClientRect(),W=r.width,H=r.height-34;let svg='';
+  if(mode==='place'){
+    const pts=groups.map(g=>{const f=files[g.ids[0]];const first=g.ids.reduce((m,i)=>files[i].date<m?files[i].date:m,'9');return{g,lat:f.lat,lon:f.lon,first}}).filter(p=>typeof p.lat==='number').sort((a,b)=>a.first<b.first?-1:1);
+    if(!pts.length){v.innerHTML='';return}
+    // far-away points (home airport) go to the corner so the trip itself fills the map
+    const med=(a)=>a.slice().sort((x,y)=>x-y)[a.length>>1],mla=med(pts.map(p=>p.lat)),mlo=med(pts.map(p=>p.lon));
+    pts.forEach(p=>p.far=Math.hypot(p.lat-mla,(p.lon-mlo)*Math.cos(mla*Math.PI/180))*111>1500);
+    const near=pts.filter(p=>!p.far);
+    const pad=70,la=near.map(p=>p.lat),lo=near.map(p=>p.lon);
+    const x0=Math.min(...lo),x1=Math.max(...lo),y0=Math.min(...la),y1=Math.max(...la);
+    const sc=Math.min((W-2*pad)/Math.max(x1-x0,.01),(H-2*pad)/Math.max(y1-y0,.01));
+    const ox=(W-(x1-x0)*sc)/2,oy=(H-(y1-y0)*sc)/2;
+    near.forEach(p=>{p.x=ox+(p.lon-x0)*sc;p.y=oy+(y1-p.lat)*sc});
+    const cx=near.reduce((a,p)=>a+p.x,0)/near.length;
+    pts.filter(p=>p.far).forEach((p,i)=>{p.x=p.lon<mlo?40:W-40;p.y=40+i*60;p.side=p.lon<mlo?'r':'l'});
+    near.forEach(p=>p.side=p.x>=cx?'r':'l');
+    near.forEach((p,i)=>near.slice(0,i).forEach(q=>{if(Math.hypot(p.x-q.x,p.y-q.y)<60&&p.side===q.side)p.side=q.side==='r'?'l':'r'}));
+    pts.forEach((p,i)=>pts.slice(0,i).forEach(q=>{if(Math.hypot(p.x-q.x,p.y-q.y)<34)p.y+=34}));
+    pts.forEach(p=>{if(p.y>H-40)p.y-=68});
+    let d=`M${pts[0].x},${pts[0].y}`;for(let i=1;i<pts.length;i++){const a=pts[i-1],b=pts[i],mx=(a.x+b.x)/2,my=(a.y+b.y)/2-Math.hypot(b.x-a.x,b.y-a.y)*.25;d+=` Q${mx},${my} ${b.x},${b.y}`}
+    svg+=`<path class="route" d="${d}"/>`;
+    pts.forEach((p,i)=>{const left=p.side==='l',tx=p.x+(left?-24:24),an=left?'end':'start';const ttl=p.far?'✈ '+p.g.title:p.g.title;
+      svg+=`<g class="pin" style="opacity:0;transition:opacity .4s ${.25*i+.3}s"><circle cx="${p.x}" cy="${p.y}" r="17" fill="#D97757" opacity=".18"/><circle cx="${p.x}" cy="${p.y}" r="9" fill="#D97757"/>
+      <text x="${tx}" y="${p.y+1}" text-anchor="${an}">${ttl}</text><text class="c" x="${tx}" y="${p.y+19}" text-anchor="${an}">ملف ${p.g.ids.length}</text></g>`});
+    v.innerHTML=`<h3>خريطة الرحلة · من بيانات GPS بالملفات</h3><svg viewBox="0 0 ${W} ${H}">${svg}</svg>`;
+  }else{
+    const bars=groups.filter(g=>g.k!=='غيرها'),max=Math.max(...bars.map(g=>g.ids.length)),n=bars.length,bw=Math.min(70,(W-40)/n-16),gap=(W-n*bw)/(n+1);
+    const fs=Math.min(13,...bars.flatMap(g=>splitLabel(g.title)).map(l=>(bw+gap-6)/(l.length*.62)));
+    bars.forEach((g,i)=>{const h=(H-90)*g.ids.length/max,x=W-(gap+i*(bw+gap))-bw,y=H-50-h;
+      svg+=`<g class="pin" style="opacity:0;transition:opacity .4s ${.08*i+.2}s"><rect x="${x}" y="${y}" width="${bw}" height="${h}" rx="8" fill="#D97757" opacity="${.45+.55*g.ids.length/max}"/>
+      <text class="c" x="${x+bw/2}" y="${y-8}" text-anchor="middle">${g.ids.length}</text>${barLabel(g.title,x+bw/2,H-30,fs)}</g>`});
+    v.innerHTML=`<h3>${{spot:'كم ملف بكل فعالية',date:'كم ملف بكل يوم',cam:'كم ملف من كل كاميرا',type:'صور · RAW · فيديو'}[mode]}</h3><svg viewBox="0 0 ${W} ${H}">${svg}</svg>`;
+  }
+  v.classList.add('on');requestAnimationFrame(()=>requestAnimationFrame(()=>v.querySelectorAll('.pin').forEach(e=>e.style.opacity=1)));
+}
+async function run(first,sec){
+  const id=++runId;
+  if(first){
+    document.querySelectorAll('.card').forEach(c=>c.classList.remove('on'));
+    tiles.forEach(t=>{t.x=R(0,innerWidth);t.y=R(innerHeight*.3,innerHeight);t.o=0;t.s=.6;t.r=R(-60,60)});
+    setStats(sec);log(`قاعد أقرا ${files.length.toLocaleString('en-US')} ملف… التاريخ، الكاميرا، اللوكيشن`);
+  }else{document.querySelectorAll('.card').forEach(c=>c.classList.remove('on'))}
+  document.getElementById('viz').classList.remove('on');
+  if(!await gather(id))return;
+  await sort(id);
+}
+document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>{mode=b.dataset.m;run(false)});
+document.getElementById('go').onclick=()=>run(true,2.1);
+addEventListener('keydown',e=>{const m={'1':'place','2':'date','3':'cam','4':'type','5':'spot'}[e.key];if(m){mode=m;run(false)}if(e.key===' '||e.key==='r')run(true,2.1);if(e.key==='b')document.body.classList.toggle('blur');if(e.key==='m'){shape=shape?'':'M';run(true,2.1)}});
+addEventListener('resize',()=>{if(groups.length&&!tiles.some(t=>t.tw))groups.forEach(g=>g.ids.forEach((ti,j)=>{Object.assign(tiles[ti],cellPos(g,j))}))});
+
+// ---------- real folder mode (everything stays on this computer) ----------
+const CITIES=[['الكويت',29.37,47.98],['دبي',25.20,55.27],['أبوظبي',24.45,54.38],['الرياض',24.71,46.68],['جدة',21.49,39.19],['مكة',21.42,39.83],['المدينة',24.47,39.61],['الدوحة',25.29,51.53],['المنامة',26.23,50.59],['مسقط',23.59,58.41],['صلالة',17.02,54.09],['إسطنبول',41.01,28.98],['طرابزون',41.00,39.72],['لندن',51.51,-0.13],['باريس',48.86,2.35],['بانكوك',13.75,100.50],['بوكيت',7.88,98.39],['كرابي',8.09,98.91],['شيانغ ماي',18.79,98.98],['بتايا',12.93,100.88],['بالي',-8.65,115.22],['كوالالمبور',3.14,101.69],['سنغافورة',1.35,103.82],['طوكيو',35.68,139.69],['سيول',37.57,126.98],['نيويورك',40.71,-74.01],['لوس أنجلس',34.05,-118.24],['القاهرة',30.04,31.24],['باكو',40.41,49.87],['تبليسي',41.72,44.79],['المالديف',4.18,73.51],['زيورخ',47.38,8.54],['إنترلاكن',46.69,7.86],['ميلانو',45.46,9.19],['روما',41.90,12.50],['برشلونة',41.39,2.17],['فيينا',48.21,16.37],['ميونخ',48.14,11.58],['سراييفو',43.86,18.41],['بيروت',33.89,35.50],['عمّان',31.95,35.93]];
+function placeName(lat,lon){let best=null,bd=1e9;for(const[c,a,b]of CITIES){const d=Math.hypot(lat-a,(lon-b)*Math.cos(lat*Math.PI/180))*111;if(d<bd){bd=d;best=c}}
+  return bd<70?best:`${lat.toFixed(1)}°, ${lon.toFixed(1)}°`}
+const VID=/\.(mov|mp4|m4v|avi|mts|insv|lrv)$/i,RAW=/\.(arw|nef|dng|cr2|cr3|raf|orf|rw2)$/i,IMG=/\.(jpe?g|heic|heif|png|webp|tiff?)$/i;
+const VIDTHUMB=(()=>{const c=document.createElement('canvas');c.width=c.height=64;const g=c.getContext('2d');g.fillStyle='#2A2622';g.fillRect(0,0,64,64);g.fillStyle='#fff';g.beginPath();g.moveTo(25,20);g.lineTo(43,32);g.lineTo(25,44);g.fill();return c.toDataURL()})();
+// QuickTime/MP4: GPS lives in the ©xyz atom, capture time in Apple's creationdate key or mvhd
+async function videoMeta(f){
+  const N=4<<20,parts=[f.slice(0,N)];if(f.size>N)parts.push(f.slice(Math.max(N,f.size-N)));
+  let txt='';for(const p of parts)txt+=new TextDecoder('latin1').decode(await p.arrayBuffer());
+  const m={};
+  const g=txt.match(/([+-]\d{1,2}\.\d{3,})([+-]\d{1,3}\.\d{3,})(?:[+-]\d+\.\d+)?\//);if(g){m.latitude=+g[1];m.longitude=+g[2]}
+  const d=txt.match(/(20\d\d-\d\d-\d\dT\d\d:\d\d:\d\d)([+-]\d\d:?\d\d)?/);if(d)m.DateTimeOriginal=new Date(d[1]+(d[2]?d[2].replace(/(\d\d)(\d\d)$/,'$1:$2'):''));
+  const mk=txt.match(/(iPhone [\w ]{1,20}?)(?: back| front|\0|$)/)||txt.match(/(GoPro|DJI|HERO\d+|FC\d{4})/);if(mk)m.Model=mk[1].trim();
+  return m;
+}
+document.getElementById('open').onclick=()=>document.getElementById('picker').click();
+document.getElementById('picker').onchange=async e=>{
+  const list=[...e.target.files].filter(f=>VID.test(f.name)||RAW.test(f.name)||IMG.test(f.name)).slice(0,900);
+  if(!list.length)return;
+  document.getElementById('path').textContent=(list[0].webkitRelativePath||'').split('/')[0]+'/';
+  document.body.classList.add('blur'); // privacy first; press B to unblur
+  log(`قاعد أقرا ${list.length} ملف…`);const t0=performance.now();
+  const out=[];
+  for(const f of list){
+    const video=VID.test(f.name);let meta={};
+    if(!video&&window.exifr){try{meta=await exifr.parse(f,{tiff:true,exif:true,gps:true,ifd1:false})||{}}catch(_){}}
+    if(video){try{meta=await videoMeta(f)}catch(_){}}
+    const dt=meta.DateTimeOriginal||meta.CreateDate||new Date(f.lastModified);
+    const d=new Date(dt);const date=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+    const has=typeof meta.latitude==='number';
+    let img=VIDTHUMB;
+    if(!video){try{img=(window.exifr&&await exifr.thumbnailUrl(f))||(/\.(jpe?g|png|webp)$/i.test(f.name)?URL.createObjectURL(f):VIDTHUMB)}catch(_){}}
+    out.push({img,video,date,cam:[meta.Make,meta.Model].filter(Boolean).join(' ').replace(/^(\w+) \1/i,'$1')||'غير معروف',
+      place:has?placeName(meta.latitude,meta.longitude):'بلا لوكيشن',placeSub:has?`${meta.latitude.toFixed(2)}°, ${meta.longitude.toFixed(2)}°`:'',lat:has?meta.latitude:null,lon:has?meta.longitude:null,
+      type:video?'فيديو':RAW.test(f.name)?'RAW':'صورة'});
+  }
+  files=out;makeTiles();run(true,(performance.now()-t0)/1000);
+};
+
+// ---------- boot (demo) ----------
+function tripData(T){
+  const KINDS=['hkt','bkk','cnx','kbv','kwt'],seen=[];const kind=p=>{if(!seen.includes(p))seen.push(p);return KINDS[seen.indexOf(p)%5]};
+  return T.files.map(r=>{const ext=(r.f.split('.').pop()||'').toUpperCase(),video=/^(MOV|MP4|M4V)$/.test(ext);
+    const has=typeof r.lat==='number',place=r.city||(has?placeName(r.lat,r.lon):'بلا لوكيشن'),k=kind(place);
+    return{img:POOL[k][video?'v':'p'][~~R(0,video?5:10)],video,date:r.d,place,placeSub:has?`${r.lat.toFixed(2)}°, ${r.lon.toFixed(2)}°`:'',lat:has?r.lat:null,lon:has?r.lon:null,
+      ev:r.ev,cam:/^IMG_/i.test(r.f)?'iPhone':/^DJI/i.test(r.f)?'DJI':/^(DSC|_DSC)/i.test(r.f)?'Nikon':'غير معروف',type:video?'فيديو':ext==='PNG'?'لقطة شاشة':'صورة'}});
+}
+if(window.TRIP&&!new URLSearchParams(location.search).has("demo")){files=tripData(TRIP);document.getElementById('path').textContent='~/Photos/'+TRIP.name+'/'}else files=demoData();
+makeTiles();setTab();
+setTimeout(()=>run(true,2.1),500);
+</script>
+</body>
+</html>

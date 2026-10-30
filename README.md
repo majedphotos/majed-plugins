@@ -7,6 +7,7 @@
 | [`content-engine-v5`](content-engine) | مصنع المحتوى: هويتك، لوحة أخبار، كاروسيل بغلاف مصمم من الخبر، تعريب بوستات انستقرام، نشر بأمر واحد عبر بلوتاتو، ووكلاء: استوديو إعلان المنتجات ومدير الجودة. (مو المنصة الكاملة — هذي أدوات الكاروسيل والنشر بس.) |
 | `majed-video` | 6 سكلات فيديو: ريل من فيديو كلام، موشن 3D، بودكاست، مونتاج على الإيقاع، أغلفة وثمبنيل، ودافنشي ريزولف. المصدر: [majedphotos/video-ad-editor](https://github.com/majedphotos/video-ad-editor). |
 | [`majed-script`](script) | سكل السكربت الإيقاعي للريلز: هوك، ورتم، ووضع «يابنق» للكلام العفوي، بلهجتك. |
+| [`majed-trips`](trips) | مرتب الرحلات: يرتب صور رحلتك من تطبيق الصور بالماك حسب المدينة والفعالية، بشاشة متحركة وألبومات تطلع بالآيفون. |
 | [`majed-live-stage`](live-stage) | شاشة العرض الحي: عرض يمشي بصوتك، المشاهد تطلع لما تقول عباراتها، وهايكو يرسم وأنت تتكلم، وتصويت الجمهور بالباركود. ومعه سكل يبني العرض ويفحصه. |
 
 ## التثبيت
@@ -34,6 +35,7 @@ claude plugin install content-engine-v5@majed-plugins
 claude plugin install majed-video@majed-plugins
 claude plugin install majed-live-stage@majed-plugins
 claude plugin install majed-script@majed-plugins
+claude plugin install majed-trips@majed-plugins
 ```
 
 ## ملاحظات
