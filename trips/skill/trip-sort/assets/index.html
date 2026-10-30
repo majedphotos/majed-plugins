@@ -129,16 +129,18 @@ const POOL={};PLACES.forEach(p=>{POOL[p.k]={p:[...Array(10)].map(()=>thumb(p.k,0
 
 // ---------- demo dataset: one trip ----------
 function demoData(){
-  const plan=[['kwt',10,24],['bkk',10,60],['bkk',11,95],['bkk',12,70],['cnx',13,85],['cnx',14,70],['hkt',15,90],['hkt',16,75],['kbv',17,80],['kwt',17,18]];
+  // [city, day, files, events that day]
+  const plan=[['kwt',10,50,['مطار الكويت']],['bkk',10,120,['سفاري ورلد']],['bkk',11,190,['آسياتيك','سوق تشاتوتشاك']],['bkk',12,140,['القصر الكبير']],
+    ['cnx',13,170,['المدينة القديمة']],['cnx',14,140,['محمية الفيلة']],['hkt',15,180,['شاطئ باتونق']],['hkt',16,150,['فانتاسي بوكيت']],['kbv',17,160,['جزر فيفي']],['kwt',17,40,['مطار الكويت']]];
   const out=[];
-  plan.forEach(([pk,day,n])=>{for(let i=0;i<n;i++){
+  plan.forEach(([pk,day,n,evs])=>{for(let i=0;i<n;i++){
     const r=Math.random();
     let cam=r<.52?'iPhone 17 Pro':r<.78?'Nikon Z8':r<.9?'DJI Mini 4 Pro':'GoPro HERO13';
     if(pk==='kwt')cam='iPhone 17 Pro';
     const video=cam==='GoPro HERO13'||cam==='DJI Mini 4 Pro'?Math.random()<.7:Math.random()<.22;
     const raw=!video&&cam==='Nikon Z8'&&Math.random()<.8;
     const place=PLACES.find(p=>p.k===pk);
-    out.push({img:POOL[pk][video?'v':'p'][~~R(0,video?5:10)],place:place.name,placeSub:place.gps,lat:place.lat,lon:place.lon,date:`2026-10-${day}`,cam,type:video?'فيديو':raw?'RAW':'صورة',video});
+    out.push({img:POOL[pk][video?'v':'p'][~~R(0,video?5:10)],place:place.name,placeSub:place.gps,lat:place.lat,lon:place.lon,date:`2026-10-${day}`,ev:evs[Math.floor(i/n*evs.length)],cam,type:video?'فيديو':raw?'RAW':'صورة',video});
   }});
   return out;
 }
