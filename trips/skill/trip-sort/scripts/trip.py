@@ -272,22 +272,27 @@ def albums(a):
     by_ev = {n: [r['id'] for r in data['files'] if r.get('ev') in ids] for n, ids in by_name.items()}
     whole = [r['id'] for r in data['files'] if r.get('ev') in keep]  # files are already in time order
     fo = esc(a.folder)
-    script = ['tell application "Photos"',
-              f'if not (exists folder "{fo}") then make new folder named "{fo}"',
-              f'set fo to folder "{fo}"']
+    head = ['with timeout of 1800 seconds', 'tell application "Photos"',
+            f'if not (exists folder "{fo}") then make new folder named "{fo}"', f'set fo to folder "{fo}"']
     def add(name, ids):
         n = esc(name)
-        script.append(f'if not (exists album "{n}" of fo) then make new album named "{n}" at fo')
-        for i in range(0, len(ids), 200):
-            items = ', '.join(f'media item id "{esc(x)}"' for x in ids[i:i + 200])
-            script.append(f'add {{{items}}} to album "{n}" of fo')
-    if not only: add(a.whole, whole)
+        script = head + [f'if not (exists album "{n}" of fo) then make new album named "{n}" at fo',
+                         f'set al to album "{n}" of fo']
+        for i in range(0, len(ids), 100):
+            items = ', '.join(f'media item id "{esc(x)}"' for x in ids[i:i + 100])
+            script.append(f'add {{{items}}} to al')
+        osa('\n'.join(script + ['end tell', 'end timeout']), timeout=1900)
+        # Photos sometimes drops a whole batch without an error: count, then add back what is missing
+        got = osa('\n'.join(head + [f'set AppleScript\'s text item delimiters to linefeed',
+                                     f'return (id of media items of album "{n}" of fo) as text', 'end tell', 'end timeout']), timeout=1900)
+        missing = [x for x in ids if x not in set(got.split())]
+        if missing:
+            items = ', '.join(f'media item id "{esc(x)}"' for x in missing)
+            osa('\n'.join(head + [f'add {{{items}}} to album "{n}" of fo', 'end tell', 'end timeout']), timeout=1900)
+        print(f'  {len(ids):4d}  {a.folder} ← {name}' + (f'  (رجّعت {len(missing)} ناقصة)' if missing else ''), flush=True)
     for k, n in enumerate(names, 1):
         add(f'{k:02d} · {n}', by_ev[n])
-    script.append('end tell')
-    osa('\n'.join(script), timeout=1800)
-    if not only: print(f'  {len(whole):4d}  {a.folder} ← {a.whole}')
-    for k, n in enumerate(names, 1): print(f'  {len(by_ev[n]):4d}  {a.folder} ← {k:02d} · {n}')
+    if not only: add(a.whole, whole)
 
 
 def main():
