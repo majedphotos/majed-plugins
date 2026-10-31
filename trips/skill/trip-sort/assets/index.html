@@ -26,6 +26,7 @@ header{display:flex;align-items:center;justify-content:space-between;padding:0 2
 .tools{display:flex;gap:8px;align-items:center}
 .btn{border:1px solid var(--line);background:#fff;font:inherit;font-size:13px;padding:7px 14px;border-radius:9px;cursor:pointer;color:var(--ink)}
 .btn.main{background:var(--ink);color:#fff;border-color:var(--ink)}
+.btn.off{opacity:.45;text-decoration:line-through}
 .stats{display:grid;grid-template-columns:repeat(6,1fr);gap:14px;padding:16px 28px}
 .stat{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:12px 16px}
 .stat b{display:block;font-size:28px;font-weight:600;font-variant-numeric:tabular-nums;line-height:1.15}
@@ -70,7 +71,8 @@ input[type=file]{display:none}
       <button class="tab" data-m="type">🎞️ النوع</button>
     </div>
     <div class="tools">
-      <button class="btn" id="open">افتح مجلد</button>
+      <button class="btn" id="air" title="المطارات داخل الترتيب ولا لا (A)">✈ المطارات</button>
+      <button class="btn" id="open" title="يقرا الملفات من جهازك — ما ينرفع شي">اختر مجلد من جهازك</button>
       <button class="btn main" id="go">رتّب</button>
     </div>
   </header>
@@ -309,7 +311,7 @@ async function run(first,sec){
 }
 document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>{mode=b.dataset.m;run(false)});
 document.getElementById('go').onclick=()=>run(true,2.1);
-addEventListener('keydown',e=>{const m={'1':'place','2':'date','3':'cam','4':'type','5':'spot'}[e.key];if(m){mode=m;run(false)}if(e.key===' '||e.key==='r')run(true,2.1);if(e.key==='b')document.body.classList.toggle('blur');if(e.key==='m'){shape=shape?'':'M';run(true,2.1)}});
+addEventListener('keydown',e=>{const m={'1':'place','2':'date','3':'cam','4':'type','5':'spot'}[e.key];if(m){mode=m;run(false)}if(e.key===' '||e.key==='r')run(true,2.1);if(e.key==='b')document.body.classList.toggle('blur');if(e.key==='m'){shape=shape?'':'M';run(true,2.1)}if(e.key==='a')toggleAir()});
 addEventListener('resize',()=>{if(groups.length&&!tiles.some(t=>t.tw))groups.forEach(g=>g.ids.forEach((ti,j)=>{Object.assign(tiles[ti],cellPos(g,j))}))});
 
 // ---------- real folder mode (everything stays on this computer) ----------
@@ -349,7 +351,7 @@ document.getElementById('picker').onchange=async e=>{
       place:has?placeName(meta.latitude,meta.longitude):'بلا لوكيشن',placeSub:has?`${meta.latitude.toFixed(2)}°, ${meta.longitude.toFixed(2)}°`:'',lat:has?meta.latitude:null,lon:has?meta.longitude:null,
       type:video?'فيديو':RAW.test(f.name)?'RAW':'صورة'});
   }
-  files=out;makeTiles();run(true,(performance.now()-t0)/1000);
+  allFiles=out;showAir=true;applyAir();makeTiles();run(true,(performance.now()-t0)/1000);
 };
 
 // ---------- boot (demo) ----------
@@ -358,10 +360,16 @@ function tripData(T){
   return T.files.map(r=>{const ext=(r.f.split('.').pop()||'').toUpperCase(),video=/^(MOV|MP4|M4V)$/.test(ext);
     const has=typeof r.lat==='number',place=r.city||(has?placeName(r.lat,r.lon):'بلا لوكيشن'),k=kind(place);
     return{img:POOL[k][video?'v':'p'][~~R(0,video?5:10)],video,date:r.d,place,placeSub:has?`${r.lat.toFixed(2)}°, ${r.lon.toFixed(2)}°`:'',lat:has?r.lat:null,lon:has?r.lon:null,
-      ev:r.ev,cam:/^IMG_/i.test(r.f)?'iPhone':/^DJI/i.test(r.f)?'DJI':/^(DSC|_DSC)/i.test(r.f)?'Nikon':'غير معروف',type:video?'فيديو':ext==='PNG'?'لقطة شاشة':'صورة'}});
+      ev:r.ev,air:!!r.air,cam:/^IMG_/i.test(r.f)?'iPhone':/^DJI/i.test(r.f)?'DJI':/^(DSC|_DSC)/i.test(r.f)?'Nikon':'غير معروف',type:video?'فيديو':ext==='PNG'?'لقطة شاشة':'صورة'}});
 }
 if(window.TRIP&&!new URLSearchParams(location.search).has("demo")){files=tripData(TRIP);document.getElementById('path').textContent='~/Photos/'+TRIP.name+'/'}else files=demoData();
-makeTiles();setTab();
+// ✈ airports in or out of the sort — files are kept, only hidden
+var allFiles=files.map(f=>({...f,air:f.air||/مطار|airport/i.test(f.ev||'')||/مطار/.test(f.place||'')}));var showAir=true;
+function applyAir(){files=showAir?allFiles:allFiles.filter(f=>!f.air);document.getElementById('air').classList.toggle('off',!showAir);
+  document.getElementById('air').style.display=allFiles.some(f=>f.air)?'':'none'}
+function toggleAir(){showAir=!showAir;applyAir();makeTiles();run(true,2.1)}
+document.getElementById('air').onclick=toggleAir;
+applyAir();makeTiles();setTab();
 setTimeout(()=>run(true,2.1),500);
 </script>
 </body>

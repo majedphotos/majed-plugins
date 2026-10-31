@@ -176,7 +176,8 @@ def page(a):
         ev = names.get(r.get('ev'))
         if ev and ev['airport'] and a.no_airports: continue
         rows.append({'f': r['f'], 'd': r['d'], 'lat': r['lat'], 'lon': r['lon'], 'city': r.get('city'),
-                     'ev': ev['name'] if ev else ((r.get('city') or 'بلا لوكيشن') + ' · متفرقات')})
+                     'ev': ev['name'] if ev else ((r.get('city') or 'بلا لوكيشن') + ' · متفرقات'),
+                     'air': bool(ev and ev['airport'])})
     site = os.path.join(a.work, 'page')
     os.makedirs(site, exist_ok=True)
     shutil.copy(os.path.join(ASSETS, 'index.html'), os.path.join(site, 'index.html'))
