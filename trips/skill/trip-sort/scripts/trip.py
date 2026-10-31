@@ -182,7 +182,7 @@ def page(a):
     os.makedirs(site, exist_ok=True)
     shutil.copy(os.path.join(ASSETS, 'index.html'), os.path.join(site, 'index.html'))
     with open(os.path.join(site, 'trip-data.js'), 'w') as f:
-        f.write('window.TRIP=' + json.dumps({'name': a.name or data['query'], 'files': rows}, ensure_ascii=False) + ';\n')
+        f.write('window.TRIP=' + json.dumps({'name': a.name or data['query'], 'home': a.home, 'files': rows}, ensure_ascii=False) + ';\n')
     url = 'file://' + os.path.join(site, 'index.html') + (f'?shape={a.shape}' if a.shape else '')
     print(url)
     # `open` drops ?query on file URLs, so hand the URL to the browser itself
@@ -304,7 +304,7 @@ def main():
     p = sp.add_parser('events'); p.add_argument('work'); p.add_argument('--gap', type=int, default=90)
     p.add_argument('--km', type=float, default=2); p.add_argument('--min', type=int, default=10); p.set_defaults(fn=events)
     p = sp.add_parser('page'); p.add_argument('work'); p.add_argument('--shape', default='')
-    p.add_argument('--name'); p.add_argument('--no-airports', action='store_true'); p.set_defaults(fn=page)
+    p.add_argument('--name'); p.add_argument('--home'); p.add_argument('--no-airports', action='store_true'); p.set_defaults(fn=page)
     p = sp.add_parser('thumbs'); p.add_argument('work'); p.add_argument('--per', type=int, default=2)
     p.add_argument('--fresh', action='store_true', help='اختار صور جديدة'); p.set_defaults(fn=thumbs)
     p = sp.add_parser('review'); p.add_argument('work'); p.add_argument('--port', type=int, default=8790); p.set_defaults(fn=review)

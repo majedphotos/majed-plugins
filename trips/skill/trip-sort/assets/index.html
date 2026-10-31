@@ -267,6 +267,9 @@ function drawViz(){
   if(mode==='place'){
     const pts=groups.map(g=>{const f=files[g.ids[0]];const first=g.ids.reduce((m,i)=>files[i].date<m?files[i].date:m,'9');return{g,lat:f.lat,lon:f.lon,first}}).filter(p=>typeof p.lat==='number').sort((a,b)=>a.first<b.first?-1:1);
     if(!pts.length){v.innerHTML='';return}
+    const H0=window.TRIP&&TRIP.home&&CITIES.find(c=>c[0]===TRIP.home);
+    if(H0&&!pts.some(p=>Math.hypot(p.lat-H0[1],(p.lon-H0[2])*Math.cos(H0[1]*Math.PI/180))*111<80)){
+      const hp={g:{title:H0[0],ids:[]},lat:H0[1],lon:H0[2],home:true};pts.unshift(hp);pts.push(hp)}
     // far-away points (home airport) go to the corner so the trip itself fills the map
     const med=(a)=>a.slice().sort((x,y)=>x-y)[a.length>>1],mla=med(pts.map(p=>p.lat)),mlo=med(pts.map(p=>p.lon));
     pts.forEach(p=>p.far=Math.hypot(p.lat-mla,(p.lon-mlo)*Math.cos(mla*Math.PI/180))*111>1500);
@@ -277,16 +280,16 @@ function drawViz(){
     const ox=(W-(x1-x0)*sc)/2,oy=(H-(y1-y0)*sc)/2;
     near.forEach(p=>{p.x=ox+(p.lon-x0)*sc;p.y=oy+(y1-p.lat)*sc});
     const cx=near.reduce((a,p)=>a+p.x,0)/near.length;
-    pts.filter(p=>p.far).forEach((p,i)=>{p.x=p.lon<mlo?40:W-40;p.y=40+i*60;p.side=p.lon<mlo?'r':'l'});
+    [...new Set(pts.filter(p=>p.far))].forEach((p,i)=>{p.x=p.lon<mlo?40:W-40;p.y=40+i*60;p.side=p.lon<mlo?'r':'l'});
     near.forEach(p=>p.side=p.x>=cx?'r':'l');
     near.forEach((p,i)=>near.slice(0,i).forEach(q=>{if(Math.hypot(p.x-q.x,p.y-q.y)<60&&p.side===q.side)p.side=q.side==='r'?'l':'r'}));
-    pts.forEach((p,i)=>pts.slice(0,i).forEach(q=>{if(Math.hypot(p.x-q.x,p.y-q.y)<34)p.y+=34}));
-    pts.forEach(p=>{if(p.y>H-40)p.y-=68});
-    let d=`M${pts[0].x},${pts[0].y}`;for(let i=1;i<pts.length;i++){const a=pts[i-1],b=pts[i],mx=(a.x+b.x)/2,my=(a.y+b.y)/2-Math.hypot(b.x-a.x,b.y-a.y)*.25;d+=` Q${mx},${my} ${b.x},${b.y}`}
+    pts.forEach((p,i)=>pts.slice(0,i).forEach(q=>{if(q!==p&&Math.hypot(p.x-q.x,p.y-q.y)<34)p.y+=34}));
+    [...new Set(pts)].forEach(p=>{if(p.y>H-40)p.y-=68;p.y=Math.max(30,p.y)});
+    let d=`M${pts[0].x},${pts[0].y}`;for(let i=1;i<pts.length;i++){const a=pts[i-1],b=pts[i],mx=(a.x+b.x)/2,my=Math.max(12,(a.y+b.y)/2-Math.hypot(b.x-a.x,b.y-a.y)*.25);d+=` Q${mx},${my} ${b.x},${b.y}`}
     svg+=`<path class="route" d="${d}"/>`;
-    pts.forEach((p,i)=>{const left=p.side==='l',tx=p.x+(left?-24:24),an=left?'end':'start';const ttl=p.far?'✈ '+p.g.title:p.g.title;
+    [...new Set(pts)].forEach((p,i)=>{const left=p.side==='l',tx=p.x+(left?-24:24),an=left?'end':'start';const ttl=(p.far||p.home)&&!p.g.title.startsWith('✈')?'✈ '+p.g.title:p.g.title;
       svg+=`<g class="pin" style="opacity:0;transition:opacity .4s ${.25*i+.3}s"><circle cx="${p.x}" cy="${p.y}" r="17" fill="#D97757" opacity=".18"/><circle cx="${p.x}" cy="${p.y}" r="9" fill="#D97757"/>
-      <text x="${tx}" y="${p.y+1}" text-anchor="${an}">${ttl}</text><text class="c" x="${tx}" y="${p.y+19}" text-anchor="${an}">ملف ${p.g.ids.length}</text></g>`});
+      <text x="${tx}" y="${p.y+1}" text-anchor="${an}">${ttl}</text><text class="c" x="${tx}" y="${p.y+19}" text-anchor="${an}">${p.home?'ذهاب وعودة':'ملف '+p.g.ids.length}</text></g>`});
     v.innerHTML=`<h3>خريطة الرحلة · من بيانات GPS بالملفات</h3><svg viewBox="0 0 ${W} ${H}">${svg}</svg>`;
   }else{
     const bars=groups.filter(g=>g.k!=='غيرها'),max=Math.max(...bars.map(g=>g.ids.length)),n=bars.length,bw=Math.min(70,(W-40)/n-16),gap=(W-n*bw)/(n+1);
@@ -358,7 +361,7 @@ document.getElementById('picker').onchange=async e=>{
 function tripData(T){
   const KINDS=['hkt','bkk','cnx','kbv','kwt'],seen=[];const kind=p=>{if(!seen.includes(p))seen.push(p);return KINDS[seen.indexOf(p)%5]};
   return T.files.map(r=>{const ext=(r.f.split('.').pop()||'').toUpperCase(),video=/^(MOV|MP4|M4V)$/.test(ext);
-    const has=typeof r.lat==='number',place=r.city||(has?placeName(r.lat,r.lon):'بلا لوكيشن'),k=kind(place);
+    const has=typeof r.lat==='number',place=r.air?'✈ '+r.ev:r.city||(has?placeName(r.lat,r.lon):'بلا لوكيشن'),k=kind(r.city||place);
     return{img:POOL[k][video?'v':'p'][~~R(0,video?5:10)],video,date:r.d,place,placeSub:has?`${r.lat.toFixed(2)}°, ${r.lon.toFixed(2)}°`:'',lat:has?r.lat:null,lon:has?r.lon:null,
       ev:r.ev,air:!!r.air,cam:/^IMG_/i.test(r.f)?'iPhone':/^DJI/i.test(r.f)?'DJI':/^(DSC|_DSC)/i.test(r.f)?'Nikon':'غير معروف',type:video?'فيديو':ext==='PNG'?'لقطة شاشة':'صورة'}});
 }
