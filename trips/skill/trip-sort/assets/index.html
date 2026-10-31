@@ -57,6 +57,13 @@ input[type=file]{display:none}
 .pin text{font-family:"IBM Plex Sans Arabic";font-size:15px;font-weight:600;fill:var(--ink)}
 .pin .c{font-family:"IBM Plex Sans Arabic";font-size:12px;fill:var(--accent);font-weight:500}
 .route{fill:none;stroke:var(--accent);stroke-width:2;stroke-dasharray:5 6;opacity:.8}
+.leg{fill:none;stroke:var(--accent);stroke-width:2.4;stroke-linecap:round;stroke-dasharray:100;stroke-dashoffset:100;animation:draw .55s ease-out forwards}
+.leg.back{stroke:#8A8178;stroke-width:2}
+.arrow{fill:var(--accent);opacity:0;animation:pop .2s forwards}.arrow.back{fill:#8A8178}
+.legn{opacity:0;animation:pop .25s forwards}.legn circle{fill:#fff;stroke:var(--accent);stroke-width:1.5}.legn text{font-size:11px;font-weight:700;fill:var(--accent)}
+.legn.back circle{stroke:#8A8178}.legn.back text{fill:#8A8178}
+#viz .key{font-size:11px;fill:var(--mute)}
+@keyframes draw{to{stroke-dashoffset:0}}@keyframes pop{to{opacity:1}}
 </style>
 </head>
 <body>
@@ -285,8 +292,15 @@ function drawViz(){
     near.forEach((p,i)=>near.slice(0,i).forEach(q=>{if(Math.hypot(p.x-q.x,p.y-q.y)<60&&p.side===q.side)p.side=q.side==='r'?'l':'r'}));
     pts.forEach((p,i)=>pts.slice(0,i).forEach(q=>{if(q!==p&&Math.hypot(p.x-q.x,p.y-q.y)<34)p.y+=34}));
     [...new Set(pts)].forEach(p=>{if(p.y>H-40)p.y-=68;p.y=Math.max(30,p.y)});
-    let d=`M${pts[0].x},${pts[0].y}`;for(let i=1;i<pts.length;i++){const a=pts[i-1],b=pts[i],mx=(a.x+b.x)/2,my=Math.max(12,(a.y+b.y)/2-Math.hypot(b.x-a.x,b.y-a.y)*.25);d+=` Q${mx},${my} ${b.x},${b.y}`}
-    svg+=`<path class="route" d="${d}"/>`;
+    // one leg per hop, drawn in travel order: numbered, arrowed, bends alternate so back-and-forth hops don't overlap
+    for(let i=1;i<pts.length;i++){const a=pts[i-1],b=pts[i],dx=b.x-a.x,dy=b.y-a.y,s=i%2?1:-1,back=!!b.home,t=.6+i*.5;
+      const mx=(a.x+b.x)/2-s*dy*.22,my=Math.max(12,(a.y+b.y)/2+s*dx*.22);
+      const ux=b.x-mx,uy=b.y-my,ul=Math.hypot(ux,uy)||1,ex=b.x-ux/ul*14,ey=b.y-uy/ul*14,ang=Math.atan2(uy,ux)*180/Math.PI;
+      const lx=.25*a.x+.5*mx+.25*ex,ly=.25*a.y+.5*my+.25*ey,c=back?' back':'';
+      svg+=`<path class="leg${c}" pathLength="100" style="animation-delay:${t}s" d="M${a.x},${a.y} Q${mx},${my} ${ex},${ey}"/>
+      <path class="arrow${c}" style="animation-delay:${t+.5}s" transform="translate(${ex},${ey}) rotate(${ang})" d="M0,0 L-9,-5 L-9,5z"/>
+      <g class="legn${c}" style="animation-delay:${t+.25}s"><circle cx="${lx}" cy="${ly}" r="10"/><text x="${lx}" y="${ly+4}" text-anchor="middle">${i}</text></g>`}
+    if(pts.some(p=>p.home))svg+=`<text class="key" x="${W-8}" y="${H-6}" text-anchor="end">الأرقام = ترتيب التنقل · الرمادي = العودة</text>`;
     [...new Set(pts)].forEach((p,i)=>{const left=p.side==='l',tx=p.x+(left?-24:24),an=left?'end':'start';const ttl=(p.far||p.home)&&!p.g.title.startsWith('✈')?'✈ '+p.g.title:p.g.title;
       svg+=`<g class="pin" style="opacity:0;transition:opacity .4s ${.25*i+.3}s"><circle cx="${p.x}" cy="${p.y}" r="17" fill="#D97757" opacity=".18"/><circle cx="${p.x}" cy="${p.y}" r="9" fill="#D97757"/>
       <text x="${tx}" y="${p.y+1}" text-anchor="${an}">${ttl}</text><text class="c" x="${tx}" y="${p.y+19}" text-anchor="${an}">${p.home?'ذهاب وعودة':'ملف '+p.g.ids.length}</text></g>`});
