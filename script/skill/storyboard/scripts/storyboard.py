@@ -1814,8 +1814,8 @@ h3{margin:0 0 4px;font-size:14px;font-weight:800;color:var(--accent)}
 .key{display:flex;gap:10px 22px;flex-wrap:wrap;align-items:center;padding:10px 14px;border:1.5px solid var(--ink);border-radius:12px;background:var(--card)}
 .key div{display:flex;align-items:center;gap:8px;font-size:14px;font-weight:700}
 .key i{display:inline-block;width:26px;height:4px;border-radius:2px}
-.shots{display:flex;gap:18px;flex-wrap:wrap;align-items:stretch}
-.shot{flex:1 1 %(basis)dpx;min-width:0;max-width:%(maxw)dpx;padding:14px;display:flex;flex-direction:column;gap:12px}
+.shots{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%%,%(basis)dpx),1fr));gap:18px;align-items:stretch}
+.shot{min-width:0;padding:14px;display:flex;flex-direction:column;gap:12px}
 .shot-head{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
 .num{font-size:15px;font-weight:800;padding:3px 12px;border-radius:99px;background:var(--ink);color:var(--card)}
 .shot-head .chip{font-size:12px;padding:3px 10px}
