@@ -1,0 +1,11 @@
+{
+  "name": "majed-storyboard",
+  "version": "1.0.0",
+  "description": "ستوري بورد من السكربت: تعطيه سكربت إعلان أو ريل ويطلّع لك صفحة وحدة فيها السكربت مقسوم على اللقطات، ورسمة سكتش بقلم رصاص لكل لقطة تبيّن وين توقف وشكبر المنتج بالكادر، وشنو تقول وشنو تسوي، وقائمة «قبل لا تصوّر». بألوانك وخطك واسم حسابك.",
+  "author": { "name": "Majed Alzaabi", "url": "https://github.com/majedphotos" },
+  "homepage": "https://github.com/majedphotos/majed-plugins/tree/main/storyboard",
+  "repository": "https://github.com/majedphotos/majed-plugins/tree/main/storyboard",
+  "license": "MIT",
+  "keywords": ["arabic", "storyboard", "reels", "ads", "shot-list", "video", "script"],
+  "skills": ["./skill/"]
+}
